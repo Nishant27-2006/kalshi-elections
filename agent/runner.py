@@ -25,7 +25,10 @@ import requests
 from .config import (AUDIT_LOG, KILL_SWITCH, MODELS, POLLING, RISK,
                      SEEN_HASHES, ensure_dirs)
 from .graph import build_graph, run_sequential
-from .market_lookup import refresh_events_cache
+from .market_lookup import quote_positions, refresh_events_cache
+from .nodes import manage_positions, vault
+from .portfolio import Portfolio
+from .vault_writer import ingest_news
 
 _judge_calls: list[float] = []
 
@@ -79,11 +82,43 @@ def _judge_budget_ok() -> bool:
     return len(_judge_calls) < MODELS.max_judge_calls_per_hour
 
 
-def cycle(graph=None) -> dict:
+def manage_open_positions() -> dict:
+    """Price every open position and close the ones that triggered.
+
+    Runs BEFORE the news pass, every cycle, unconditionally. Exits must not
+    depend on a headline happening to mention a ticker we hold -- that was the
+    structural reason nothing in this repo ever sold.
+    """
+    book = Portfolio.load()
+    if not book.positions:
+        return {"open": 0, "exited": 0}
+
+    tickers = [p.ticker for p in book.positions]
+    try:
+        from kalshi_client import KalshiClient
+        quotes = quote_positions(KalshiClient.from_env(), tickers)
+    except Exception as e:
+        audit({"stage": "exit_scan_error", "error": str(e)[:300],
+               "tickers": tickers})
+        return {"open": len(tickers), "exited": 0, "error": str(e)[:120]}
+
+    results = manage_positions(quotes)
+    exited = 0
+    for r in results:
+        if r.get("action") in ("exit_dry_run", "exit_submitted"):
+            exited += 1
+        if r.get("action") != "hold":
+            audit({"stage": "exit", **r})
+    return {"open": len(tickers), "exited": exited}
+
+
+def cycle(graph=None, *, update_vault: bool = True) -> dict:
     """One poll -> process pass. Returns a summary."""
     seen = _load_seen()
     stats = {"fetched": 0, "new": 0, "relevant": 0, "judged": 0,
              "approved": 0, "executed": 0}
+    stats["exits"] = manage_open_positions()
+    fresh_items: list[dict] = []
 
     for query in POLLING.queries:
         for item in fetch_news(query, POLLING.news_lookback_hours):
@@ -92,6 +127,8 @@ def cycle(graph=None) -> dict:
                 continue
             seen.add(item["hash"])
             stats["new"] += 1
+
+            fresh_items.append(item)
 
             state = {"news": item, "notes": []}
             try:
@@ -129,6 +166,22 @@ def cycle(graph=None) -> dict:
                 "terminated_at": result.get("terminated_at"),
             })
 
+    # Political knowledge is a time series. Every headline that reached this
+    # cycle carries a pub_date, so it is written into the notes it matches
+    # with that timestamp -- otherwise the vault silently ages while the
+    # judge keeps reading it as current.
+    if update_vault and fresh_items:
+        try:
+            results = ingest_news(vault(), fresh_items)
+            written = sum(r.get("added", 0) for r in results)
+            stats["vault_events_added"] = written
+            for r in results:
+                if r.get("added"):
+                    audit({"stage": "vault_update", **r})
+        except Exception as e:
+            audit({"stage": "vault_update_error", "error": str(e)[:300]})
+            stats["vault_events_added"] = 0
+
     _save_seen(seen)
     return stats
 
@@ -136,6 +189,8 @@ def cycle(graph=None) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--once", action="store_true")
+    ap.add_argument("--no-vault-update", action="store_true",
+                    help="do not write timestamped headlines into the vault")
     ap.add_argument("--refresh-markets", action="store_true",
                     help="re-cache the Kalshi open-events list first")
     args = ap.parse_args()
@@ -149,6 +204,10 @@ def main() -> None:
           f"daily_loss_cap=${RISK.max_daily_loss_usd} "
           f"total_capital=${RISK.total_capital_usd}")
     print(f"poll every {POLLING.interval_seconds}s | kill switch: {KILL_SWITCH}")
+    book = Portfolio.load()
+    rs = book.risk_state()
+    print(f"ledger: {rs.open_positions} open (${rs.deployed_usd:.2f} deployed) "
+          f"| today realized ${rs.realized_pnl_today_usd:+.2f}")
 
     if args.refresh_markets:
         from kalshi_client import KalshiClient
@@ -160,7 +219,7 @@ def main() -> None:
             print("KILL switch present -- halting.")
             return
         started = time.time()
-        stats = cycle(graph)
+        stats = cycle(graph, update_vault=not args.no_vault_update)
         print(f"[{datetime.now().strftime('%H:%M:%S')}] {stats} "
               f"({time.time()-started:.1f}s)")
         if args.once:

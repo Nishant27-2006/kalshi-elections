@@ -41,3 +41,9 @@ data_cache/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# local key inventory - never commit
+config/api_keys_required.md
+state/_*
+state/scan_*.json
+state/seen.json

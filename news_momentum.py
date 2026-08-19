@@ -97,7 +97,7 @@ def check_kalshi_momentum(client: KalshiClient, entity_name: str, info: dict, ho
     except Exception as e:
         print(f"    Kalshi lookup failed: {e}")
         return
-    markets = md.get("markets", [])
+    markets = md.get("markets") or []
     if not markets:
         print(f"    Event {info['kalshi_event']} returned no markets from the API right now"
               f" (known Kalshi listing quirk — try the ticker directly if you have it).")

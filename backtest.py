@@ -22,13 +22,17 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import statistics
+import tempfile
 import time
+from pathlib import Path
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
 from agent.config import RiskLimits
+from agent.portfolio import Portfolio, Position
 from agent.risk import PortfolioState, evaluate
 from kalshi_client import KalshiClient
 
@@ -107,7 +111,7 @@ def fetch_candles(client: KalshiClient, series: str, ticker: str,
 
 def simulate(candles: list[Candle], ticker: str, limits: RiskLimits,
              move_threshold: float, vol_threshold: float,
-             lookback: int) -> list[Trade]:
+             lookback: int) -> tuple[list[Trade], list[dict]]:
     """Momentum rule: after a >=move_threshold move over `lookback` candles
     on >=vol_threshold volume, enter in the direction of the move.
 
@@ -115,6 +119,7 @@ def simulate(candles: list[Candle], ticker: str, limits: RiskLimits,
     is deliberately pessimistic rather than assuming mid-price fills.
     """
     trades: list[Trade] = []
+    candidates: list[dict] = []
     for i in range(lookback, len(candles) - 1):
         window = candles[i - lookback:i + 1]
         move = window[-1].close - window[0].close
@@ -142,6 +147,19 @@ def simulate(candles: list[Candle], ticker: str, limits: RiskLimits,
             "yes_ask_cents": mid + 1,
             "book_depth_contracts": max(vol, 1.0),
         }
+        def side_price_of(c: Candle, sd=side) -> float:
+            return c.close if sd == "yes" else (100.0 - c.close)
+
+        cand = {
+            "ts": candles[i].ts, "ticker": ticker, "side": side,
+            "entry": entry, "move": move, "judgment": judgment,
+            "market": market,
+            "exit_1h": side_price_of(candles[i + 1]) if i + 1 < len(candles) else None,
+            "exit_4h": side_price_of(candles[i + 4]) if i + 4 < len(candles) else None,
+            "exit_end": side_price_of(candles[-1]),
+        }
+        candidates.append(cand)
+
         decision = evaluate(judgment, market, PortfolioState(), limits)
         if not decision["approved"]:
             continue
@@ -159,7 +177,7 @@ def simulate(candles: list[Candle], ticker: str, limits: RiskLimits,
             t.exit_price_4h = side_price(candles[i + 4])
         t.exit_price_end = side_price(candles[-1])
         trades.append(t)
-    return trades
+    return trades, candidates
 
 
 def report(all_trades: list[Trade], horizon: str) -> dict:
@@ -183,6 +201,102 @@ def report(all_trades: list[Trade], horizon: str) -> dict:
     }
 
 
+# The backtest keeps its ledger in a scratch file: replaying history must
+# never overwrite the live position ledger.
+_SCRATCH = Path(tempfile.gettempdir()) / "kalshi_backtest_positions.json"
+
+MOVE_BUCKETS = ((0.0, 5.0), (5.0, 10.0), (10.0, 20.0), (20.0, 1e9))
+
+
+def bucket_label(move: float) -> str:
+    a = abs(move)
+    for lo, hi in MOVE_BUCKETS:
+        if lo <= a < hi:
+            return f">={lo:.0f}c" if hi >= 1e9 else f"{lo:.0f}-{hi:.0f}c"
+    return "?"
+
+
+def report_by_bucket(trades: list["Trade"], horizon: str) -> list[dict]:
+    """Win rate split by trigger size.
+
+    The headline number hides the shape: the biggest triggers were the worst
+    bucket. Reporting only the pooled win rate would let a 6% bucket sit
+    inside a respectable-looking average.
+    """
+    buckets: dict[str, list[Trade]] = {}
+    for t in trades:
+        buckets.setdefault(bucket_label(t.trigger_move), []).append(t)
+    out = []
+    order = [f"{lo:.0f}-{hi:.0f}c" if hi < 1e9 else f">={lo:.0f}c"
+             for lo, hi in MOVE_BUCKETS]
+    for label in order:
+        ts = buckets.get(label)
+        if not ts:
+            continue
+        r = report(ts, horizon)
+        r["bucket"] = label
+        out.append(r)
+    return out
+
+
+def simulate_stateful(all_candidates: list[dict], limits: RiskLimits,
+                      hold_hours: int = 4) -> list["Trade"]:
+    """Replay every candidate in time order against ONE running portfolio.
+
+    This is the difference the ledger makes. The stateless path evaluates each
+    entry against a blank PortfolioState, so the duplicate-position,
+    max_open_positions, daily-loss and total-capital caps can never reject
+    anything -- exactly the condition the live loop was in before
+    agent/portfolio.py existed. Here a position occupies a slot and consumes
+    capital until it is closed `hold_hours` later, so the caps actually bind.
+    """
+    book = Portfolio()
+    trades: list[Trade] = []
+    rejections: dict[str, int] = {}
+    open_until: dict[str, tuple[int, float]] = {}    # ticker -> (close_ts, exit px)
+
+    for cand in sorted(all_candidates, key=lambda c: c["ts"]):
+        now = cand["ts"]
+
+        # close anything whose holding period elapsed, freeing slot + capital
+        for tk, (close_ts, exit_px) in list(open_until.items()):
+            if close_ts <= now:
+                book.close_position(tk, exit_px, "backtest hold elapsed",
+                                    path=_SCRATCH)
+                del open_until[tk]
+
+        decision = evaluate(cand["judgment"], cand["market"],
+                            book.risk_state(), limits)
+        if not decision["approved"]:
+            key = decision["reason"].split("(")[0].strip()[:40]
+            rejections[key] = rejections.get(key, 0) + 1
+            continue
+
+        t = Trade(ticker=cand["ticker"], entry_ts=now, entry_price=cand["entry"],
+                  side=cand["side"], size=decision["size_contracts"],
+                  size_usd=decision["size_usd"], trigger_move=cand["move"])
+        t.exit_price_1h = cand["exit_1h"]
+        t.exit_price_4h = cand["exit_4h"]
+        t.exit_price_end = cand["exit_end"]
+        trades.append(t)
+
+        book.open_position(Position(
+            ticker=cand["ticker"], side=cand["side"],
+            size_contracts=decision["size_contracts"],
+            entry_price_cents=cand["entry"], cost_usd=decision["size_usd"],
+        ), path=_SCRATCH)
+        exit_px = cand["exit_4h"] if cand["exit_4h"] is not None else cand["entry"]
+        open_until[cand["ticker"]] = (now + hold_hours * 3600, exit_px)
+
+    print()
+    print("=== Risk-gate rejections with a REAL portfolio (stateful) ===")
+    if not rejections:
+        print("  none -- no cap ever bound")
+    for reason, n in sorted(rejections.items(), key=lambda kv: -kv[1]):
+        print(f"  {n:4d}  {reason}")
+    return trades
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--days", type=int, default=7)
@@ -191,6 +305,17 @@ def main() -> None:
     ap.add_argument("--vol", type=float, default=200.0,
                     help="contracts of volume required in window")
     ap.add_argument("--lookback", type=int, default=3, help="candles (hours)")
+    ap.add_argument("--stateful", action="store_true",
+                    help="replay entries chronologically against ONE running "
+                         "portfolio so the four caps actually bind")
+    ap.add_argument("--hold-hours", type=int, default=4,
+                    help="how long a stateful position occupies a slot")
+    ap.add_argument("--universe-from", metavar="SCAN_JSON",
+                    help="read (series, ticker) pairs from a find_momentum "
+                         "--out file instead of the hardcoded UNIVERSE. The "
+                         "built-in list has gone stale -- most of its tickers "
+                         "now return 0-2 candles, which is why the default "
+                         "run produces a sample too small to read.")
     args = ap.parse_args()
 
     client = KalshiClient.from_env()
@@ -203,16 +328,40 @@ def main() -> None:
           f"max_spread={limits.max_spread_cents}c\n")
 
     all_trades: list[Trade] = []
-    for series, ticker in UNIVERSE:
+    all_candidates: list[dict] = []
+    universe = UNIVERSE
+    if args.universe_from:
+        with open(args.universe_from, encoding="utf-8") as f:
+            scan = json.load(f)
+        seen, universe = set(), []
+        for r in scan.get("results", []):
+            pair = (r.get("series"), r.get("ticker"))
+            if all(pair) and pair not in seen:
+                seen.add(pair)
+                universe.append(pair)
+        print(f"universe: {len(universe)} tickers from {args.universe_from}")
+
+    for series, ticker in universe:
         candles = fetch_candles(client, series, ticker, args.days)
         if len(candles) < args.lookback + 2:
             print(f"  {ticker:38s} insufficient history ({len(candles)} candles)")
             continue
-        trades = simulate(candles, ticker, limits, args.move, args.vol, args.lookback)
+        trades, cands = simulate(candles, ticker, limits, args.move, args.vol,
+                                 args.lookback)
         rng = f"{min(c.close for c in candles):.0f}-{max(c.close for c in candles):.0f}c"
         print(f"  {ticker:38s} {len(candles):3d} candles  range {rng:10s} "
               f"-> {len(trades)} entries")
         all_trades.extend(trades)
+        all_candidates.extend(cands)
+
+    if args.stateful:
+        stateless_n = len(all_trades)
+        if _SCRATCH.exists():
+            _SCRATCH.unlink()
+        all_trades = simulate_stateful(all_candidates, limits, args.hold_hours)
+        print(f"  stateless entries: {stateless_n}  ->  stateful entries: "
+              f"{len(all_trades)}  "
+              f"({stateless_n - len(all_trades)} blocked by portfolio caps)")
 
     print(f"\n=== {len(all_trades)} simulated entries ===")
     if not all_trades:
@@ -226,6 +375,12 @@ def main() -> None:
                   f"total=${r['total_pnl']:>7.2f}  avg=${r['avg_pnl']:>6.3f}  "
                   f"median=${r['median_pnl']:>6.3f}  win_rate={r['win_rate']:.1%}  "
                   f"best=${r['best']}  worst=${r['worst']}")
+
+    print()
+    print("Win rate by trigger-move bucket (4h horizon):")
+    for r in report_by_bucket(all_trades, "4h"):
+        print(f"  {r['bucket']:>8s}  n={r['trades']:3d}  win={r['win_rate']:6.1%}  "
+              f"median=${r['median_pnl']:>7.3f}  total=${r['total_pnl']:>8.2f}")
 
     print("\nPer-ticker (end-of-series horizon):")
     by_ticker: dict[str, list[Trade]] = {}

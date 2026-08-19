@@ -22,6 +22,7 @@ class MarketSnapshot(TypedDict, total=False):
     book_depth_contracts: float
     last_price_cents: float
     volume_recent: float
+    close_time: str            # ISO; drives the time-based exit
 
 
 class Judgment(TypedDict, total=False):
@@ -70,6 +71,10 @@ class AgentState(TypedDict, total=False):
     executed: bool
     execution_result: dict[str, Any] | None
 
+    # T3 compressed vault facts injected into the T5 prompt (<=800 chars)
+    expert_context: dict[str, str] | None
+
     # bookkeeping
+    decision: str              # e.g. "SKIPPED_NO_KEY" when a tier degraded
     terminated_at: str
     notes: list[str]

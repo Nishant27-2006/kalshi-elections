@@ -46,7 +46,7 @@ def list_politics_series(client: KalshiClient, search: str | None = None) -> Non
 
 def show_events(client: KalshiClient, series_ticker: str) -> None:
     data = client.get_events(series_ticker=series_ticker, status="open")
-    events = data.get("events", [])
+    events = data.get("events") or []
     print(f"{len(events)} open events in series {series_ticker}:\n")
     for e in events:
         print(f"  {e.get('event_ticker'):25s} {e.get('title')}")
@@ -54,13 +54,17 @@ def show_events(client: KalshiClient, series_ticker: str) -> None:
 
 def show_markets(client: KalshiClient, event_ticker: str) -> None:
     data = client.get_markets(event_ticker=event_ticker)
-    markets = data.get("markets", [])
+    markets = data.get("markets") or []
     print(f"{len(markets)} markets in event {event_ticker}:\n")
     for m in markets:
-        yes_bid = m.get("yes_bid")
-        yes_ask = m.get("yes_ask")
+        # Fixed-point fields: dollar-strings under _dollars, counts under _fp.
+        def _c(v):
+            return f"{float(v) * 100:.0f}c" if v is not None else "--"
+        yes_bid = _c(m.get("yes_bid_dollars"))
+        yes_ask = _c(m.get("yes_ask_dollars"))
+        vol = float(m.get("volume_fp") or 0)
         print(f"  {m.get('ticker'):30s} {m.get('title', ''):45s} "
-              f"yes_bid={yes_bid} yes_ask={yes_ask}")
+              f"yes_bid={yes_bid:>5s} yes_ask={yes_ask:>5s} vol={vol:,.0f}")
 
 
 def show_market_detail(client: KalshiClient, ticker: str) -> None:
