@@ -111,7 +111,31 @@ def test_a_ticker_with_too_short_a_path_is_skipped(tmp_path):
     p.write_text(json.dumps(_row("KXMLBGAME-Z", 1, 49, 51,
                                  series="KXMLBGAME")), encoding="utf-8")
     stats = calibrate(load_recording(p), horizon=3)
-    assert stats == {} or stats["mlb_game"].n == 0
+    assert stats == {}, "a ticker with no path must not appear in the output at all"
+
+
+def test_an_unmeasured_series_falls_back_to_the_worst_known_void_rate(tmp_path):
+    """A series with no measured void rate is NOT skipped and NOT guessed at:
+    it is bucketed as 'unmeasured' and priced with DEFAULT_VOID_RATE, which is
+    the MAXIMUM measured rate. An unknown vertical is treated as the worst one
+    observed, so the fallback must never silently become a mean."""
+    from agent.void_rates import DEFAULT_VOID_RATE
+    from agent.risk_unit import ru_per_contract
+
+    p = tmp_path / "rec.jsonl"
+    rows = [_row("KXZZUNKNOWN-1", ts, price - 1, price + 1,
+                 series="KXZZUNKNOWN")
+            for ts, price in enumerate([50, 48, 47], start=1)]
+    p.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+
+    stats = calibrate(load_recording(p), horizon=3)
+    assert set(stats) == {"unmeasured"}
+    assert stats["unmeasured"].n == 1
+    assert stats["unmeasured"].breaches == 0
+    # the rate actually used is the default, not the mlb_game rate
+    assert ru_per_contract(0.51, spread_cents=2,
+                           void_rate=DEFAULT_VOID_RATE) > ru_per_contract(
+        0.51, spread_cents=2, void_rate=0.005)
 
 
 def test_execution_stays_disabled_throughout_this_plan():
