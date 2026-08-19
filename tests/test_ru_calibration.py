@@ -65,8 +65,10 @@ def test_a_recording_loads_grouped_by_ticker_in_time_order(tmp_path):
     assert [r["ts"] for r in by_ticker["KXA-1"]] == [1, 3]
 
 
-def test_calibration_reports_breaches_per_vertical(tmp_path):
-    """A book that collapses 50c -> 5c and a flat one both stay within RU bounds."""
+def test_a_mid_priced_book_cannot_breach_its_own_RU(tmp_path):
+    """At 51c the predicted RU (0.5324) EXCEEDS the maximum possible loss
+    (0.5100), so neither a collapse to 5c nor a flat book can breach. This is
+    a property of SIGMA_MULTIPLE=2.0, not of the data."""
     p = tmp_path / "rec.jsonl"
     rows = []
     for ts, price in enumerate([50, 45, 30, 5], start=1):
@@ -81,6 +83,27 @@ def test_calibration_reports_breaches_per_vertical(tmp_path):
     assert "mlb_game" in stats
     assert stats["mlb_game"].n == 2
     assert stats["mlb_game"].breaches == 0
+
+
+def test_a_collapsing_favourite_breaches_its_RU(tmp_path):
+    """Breaches live at the EXTREMES. A 91c favourite that goes to 2c realises
+    0.89 of adverse excursion against a predicted RU of 0.5238, so it breaches
+    -- and this is the only test that proves calibrate() compares realised
+    against predicted in that order rather than the reverse."""
+    p = tmp_path / "rec.jsonl"
+    rows = []
+    for ts, price in enumerate([91, 60, 20, 2], start=1):
+        rows.append(_row("KXMLBGAME-F", ts, price - 1, price + 1,
+                         series="KXMLBGAME"))
+    for ts, price in enumerate([50, 50, 50, 50], start=1):
+        rows.append(_row("KXMLBGAME-Y", ts, price - 1, price + 1,
+                         series="KXMLBGAME"))
+    p.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+
+    stats = calibrate(load_recording(p), horizon=3)
+    assert stats["mlb_game"].n == 2
+    assert stats["mlb_game"].breaches == 1
+    assert stats["mlb_game"].rate == 0.5
 
 
 def test_a_ticker_with_too_short_a_path_is_skipped(tmp_path):

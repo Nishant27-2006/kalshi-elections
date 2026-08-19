@@ -18,7 +18,14 @@ Spec section 7.3.
 """
 from __future__ import annotations
 
+import argparse
+import json
+from collections import defaultdict
 from dataclasses import dataclass
+from pathlib import Path
+
+from agent.risk_unit import ru_per_contract
+from agent.void_rates import DEFAULT_VOID_RATE, vertical_for_series, void_rate_for_series
 
 
 def adverse_excursion(entry_price_c: float, path_c: list[float],
@@ -68,14 +75,6 @@ def breach_stats(observations: list[tuple[float, float]],
                    if realised > predicted)
     return BreachStats(n, breaches, breaches / n, nominal)
 
-
-import argparse
-import json
-from collections import defaultdict
-from pathlib import Path
-
-from agent.risk_unit import ru_per_contract
-from agent.void_rates import DEFAULT_VOID_RATE, vertical_for_series, void_rate_for_series
 
 # With SIGMA_MULTIPLE = 2.0 the model plans for a two-sigma adverse traverse,
 # so a well-calibrated book should breach only occasionally. This is the
