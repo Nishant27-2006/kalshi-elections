@@ -18,7 +18,6 @@ See docs/superpowers/specs/2026-08-19-prediction-market-fund-design.md section 5
 from __future__ import annotations
 
 import math
-import math as _math
 from collections import defaultdict
 from dataclasses import dataclass
 
@@ -108,25 +107,49 @@ def size_position(ru_budget: float, price: float, spread_cents: float,
     return Sizing(contracts, per, contracts * per, False, "")
 
 
-def cluster_key(event_ticker: str, settlement_source: str) -> str:
-    """Positions sharing an EVENT or a SETTLEMENT SOURCE are not independent.
-
-    The vault documents why: Alcaraz priced 61c to compete and 19c to win is
-    one position; and every contract settled by one authority shares that
-    authority's failure mode.
-    """
-    return f"{event_ticker or '?'}|{settlement_source or '?'}"
-
-
-def portfolio_ru(positions: list[tuple[str, float]]) -> float:
+def portfolio_ru(positions: list[tuple[str, str, float]]) -> float:
     """Total Risk Units across a book.
 
-    LINEAR within a cluster (no diversification credit), ROOT-SUM-SQUARE
-    across clusters.
+    positions: (event_ticker, settlement_source, ru) triples.
+
+    Two positions join the same cluster if they share an EVENT or a
+    SETTLEMENT SOURCE, and the relation is transitive -- so clusters are
+    connected components, not key matches. Sum LINEARLY within a component
+    (no diversification credit), ROOT-SUM-SQUARE across components.
+
+    A key of the form f"{event}|{source}" would be a CONJUNCTION: two
+    different matches settled by one authority would land in different
+    clusters and be credited as diversified. Transitive grouping is the
+    conservative direction -- it groups more and credits less.
     """
     if not positions:
         return 0.0
-    by_cluster: dict[str, float] = defaultdict(float)
-    for key, ru in positions:
-        by_cluster[key] += ru
-    return _math.sqrt(sum(v * v for v in by_cluster.values()))
+
+    parent: dict[str, str] = {}
+
+    def find(node: str) -> str:
+        parent.setdefault(node, node)
+        while parent[node] != node:
+            parent[node] = parent[parent[node]]
+            node = parent[node]
+        return node
+
+    def union(a: str, b: str) -> None:
+        root_a, root_b = find(a), find(b)
+        if root_a != root_b:
+            parent[root_a] = root_b
+
+    for i, (event, source, _ru) in enumerate(positions):
+        node = f"pos:{i}"
+        find(node)
+        # only link on values that exist -- blank fields must not merge every
+        # unlabelled position into one giant cluster
+        if event:
+            union(node, f"event:{event}")
+        if source:
+            union(node, f"source:{source}")
+
+    totals: dict[str, float] = defaultdict(float)
+    for i, (_event, _source, ru) in enumerate(positions):
+        totals[find(f"pos:{i}")] += ru
+    return math.sqrt(sum(value * value for value in totals.values()))

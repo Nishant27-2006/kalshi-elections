@@ -8,7 +8,7 @@ import pytest
 
 from agent.risk_unit import (FEE_PER_CONTRACT_USD, MIN_PRICE_DOLLARS,
                              SIGMA_MULTIPLE, Sizing, ru_per_contract,
-                             size_position, UNSIZEABLE_STRUCTURES, cluster_key,
+                             size_position, UNSIZEABLE_STRUCTURES,
                              portfolio_ru)
 
 
@@ -111,6 +111,13 @@ def test_sub_three_cent_positions_are_refused_not_sized():
     assert MIN_PRICE_DOLLARS == 0.03
 
 
+def test_the_sub_three_cent_refusal_applies_to_the_no_side_too():
+    """Buying NO at 98c risks 2c -- the same sub-tick-stop problem."""
+    s = size_position(10.0, price=0.98, spread_cents=1.0, void_rate=0.0, side="no")
+    assert s.refused
+    assert s.contracts == 0
+
+
 def test_unknown_structure_is_refused_not_sized():
     """If the exposure is not known it cannot be sized. Spec section 5."""
     for structure in ("disputed", "indeterminate"):
@@ -138,29 +145,34 @@ def test_a_budget_too_small_for_one_contract_is_refused():
     assert s.contracts == 0
 
 
-def test_positions_in_one_cluster_get_no_diversification_credit():
+def test_positions_on_one_event_get_no_diversification_credit():
     """Alcaraz at 61c to compete and 19c to win is ONE position, not two."""
-    same = [("c1", 3.0), ("c1", 4.0)]
-    assert portfolio_ru(same) == pytest.approx(7.0)
+    assert portfolio_ru([("E1", "SRC-A", 3.0), ("E1", "SRC-B", 4.0)]) == pytest.approx(7.0)
 
 
-def test_positions_across_clusters_are_root_sum_squared():
-    across = [("c1", 3.0), ("c2", 4.0)]
-    assert portfolio_ru(across) == pytest.approx(5.0)
+def test_positions_sharing_a_settlement_source_also_cluster():
+    """Two different events settled by one authority share that authority's
+    failure mode. The previous AND-keyed implementation silently credited
+    this pair as diversified."""
+    assert portfolio_ru([("E1", "ATP", 3.0), ("E2", "ATP", 4.0)]) == pytest.approx(7.0)
 
 
-def test_clustering_is_by_event_or_by_settlement_source():
-    """Two contracts on one event are correlated; so are two contracts that
-    depend on the same authority publishing."""
-    assert cluster_key("KXATP-26USO", "ATP") == cluster_key("KXATP-26USO", "ATP")
-    assert cluster_key("KXATP-26USO", "ATP") != cluster_key("KXNFL-27", "ATP")
+def test_unrelated_positions_are_root_sum_squared():
+    assert portfolio_ru([("E1", "SRC-A", 3.0), ("E2", "SRC-B", 4.0)]) == pytest.approx(5.0)
+
+
+def test_clustering_is_transitive():
+    """A shares an event with B; B shares a source with C. All three are one
+    cluster -- conservative by design, because under-grouping understates
+    correlated risk."""
+    chain = [("E1", "SRC-A", 1.0), ("E1", "SRC-B", 2.0), ("E2", "SRC-B", 3.0)]
+    assert portfolio_ru(chain) == pytest.approx(6.0)
+
+
+def test_blank_fields_do_not_merge_unrelated_positions():
+    """Two positions with no event and no source are not thereby related."""
+    assert portfolio_ru([("", "", 3.0), ("", "", 4.0)]) == pytest.approx(5.0)
 
 
 def test_an_empty_book_carries_no_risk():
     assert portfolio_ru([]) == 0.0
-
-
-def test_aggregation_never_exceeds_the_linear_sum():
-    """Sanity: sqrt-combining across clusters cannot invent risk."""
-    positions = [("a", 2.0), ("b", 3.0), ("c", 6.0)]
-    assert portfolio_ru(positions) <= sum(ru for _, ru in positions)
