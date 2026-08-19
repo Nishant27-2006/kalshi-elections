@@ -41,3 +41,60 @@ def test_an_empty_sample_reports_no_rate_rather_than_zero():
     stats = breach_stats([], nominal=0.05)
     assert stats.n == 0
     assert stats.rate is None
+
+
+import json
+
+from ru_calibration import calibrate, load_recording
+
+
+def _row(ticker, ts, bid, ask, series=None):
+    return {"ts": ts, "ticker": ticker,
+            "series": series or ticker.split("-", 1)[0],
+            "event_ticker": "E", "yes_bid_c": bid, "yes_ask_c": ask,
+            "spread_c": ask - bid, "oi": 1000.0, "v24": 100.0}
+
+
+def test_a_recording_loads_grouped_by_ticker_in_time_order(tmp_path):
+    p = tmp_path / "rec.jsonl"
+    p.write_text("\n".join(json.dumps(r) for r in [
+        _row("KXA-1", 3, 40, 42), _row("KXA-1", 1, 50, 52),
+        _row("KXB-1", 2, 10, 12)]), encoding="utf-8")
+    by_ticker = load_recording(p)
+    assert set(by_ticker) == {"KXA-1", "KXB-1"}
+    assert [r["ts"] for r in by_ticker["KXA-1"]] == [1, 3]
+
+
+def test_calibration_reports_breaches_per_vertical(tmp_path):
+    """A book that collapses 50c -> 5c and a flat one both stay within RU bounds."""
+    p = tmp_path / "rec.jsonl"
+    rows = []
+    for ts, price in enumerate([50, 45, 30, 5], start=1):
+        rows.append(_row("KXMLBGAME-X", ts, price - 1, price + 1,
+                         series="KXMLBGAME"))
+    for ts, price in enumerate([50, 50, 50, 50], start=1):
+        rows.append(_row("KXMLBGAME-Y", ts, price - 1, price + 1,
+                         series="KXMLBGAME"))
+    p.write_text("\n".join(json.dumps(r) for r in rows), encoding="utf-8")
+
+    stats = calibrate(load_recording(p), horizon=3)
+    assert "mlb_game" in stats
+    assert stats["mlb_game"].n == 2
+    assert stats["mlb_game"].breaches == 0
+
+
+def test_a_ticker_with_too_short_a_path_is_skipped(tmp_path):
+    p = tmp_path / "rec.jsonl"
+    p.write_text(json.dumps(_row("KXMLBGAME-Z", 1, 49, 51,
+                                 series="KXMLBGAME")), encoding="utf-8")
+    stats = calibrate(load_recording(p), horizon=3)
+    assert stats == {} or stats["mlb_game"].n == 0
+
+
+def test_execution_stays_disabled_throughout_this_plan():
+    """GLOBAL CONSTRAINT: nothing in Plan 1 may enable execution."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+    from agent.risk import RISK
+    assert RISK.is_live() is False
