@@ -13,6 +13,13 @@ places no orders.
 """
 from __future__ import annotations
 
+import argparse
+import json
+import time
+from pathlib import Path
+
+from find_momentum import _all_open_markets
+from kalshi_client import KalshiClient
 from momentum_filter import _ask_cents, _bid_cents
 
 SNAPSHOT_FIELDS: tuple[str, ...] = (
@@ -52,3 +59,68 @@ def snapshot_from_market(market: dict, ts: int) -> dict | None:
         "oi": _fp(market.get("open_interest_fp")),
         "v24": _fp(market.get("volume_24h_fp")),
     }
+
+
+def append_snapshots(path: Path, snapshots: list[dict]) -> int:
+    """Append rows as JSONL. Never rewrites, so a long recording is safe to
+    interrupt at any moment."""
+    if not snapshots:
+        return 0
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for snap in snapshots:
+            fh.write(json.dumps(snap) + "\n")
+    return len(snapshots)
+
+
+def record_once(client, series_list: list[str], path: Path, ts: int) -> int:
+    """One sweep over the watchlist. Returns rows written.
+
+    A series that errors is skipped and ANNOUNCED -- it must not abort the
+    pass, or one dead ticker costs the whole recording window.
+    """
+    rows: list[dict] = []
+    for series in series_list:
+        try:
+            markets = _all_open_markets(client, series)
+        except Exception as exc:                      # noqa: BLE001
+            print(f"  skip {series}: {type(exc).__name__}")
+            continue
+        for market in markets or []:
+            snap = snapshot_from_market(market, ts)
+            if snap is not None:
+                rows.append(snap)
+    return append_snapshots(path, rows)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--series", action="append", required=True,
+                    help="series ticker to record; repeatable")
+    ap.add_argument("--out", default="state/book_recording.jsonl")
+    ap.add_argument("--interval", type=int, default=60,
+                    help="seconds between sweeps")
+    ap.add_argument("--sweeps", type=int, default=0,
+                    help="number of sweeps; 0 means run until interrupted")
+    args = ap.parse_args()
+
+    client = KalshiClient.from_env()
+    path = Path(args.out)
+    swept = 0
+    try:
+        while args.sweeps == 0 or swept < args.sweeps:
+            ts = int(time.time())
+            n = record_once(client, args.series, path, ts)
+            swept += 1
+            print(f"[{ts}] sweep {swept}: {n} rows -> {path}")
+            if args.sweeps and swept >= args.sweeps:
+                break
+            time.sleep(args.interval)
+    except KeyboardInterrupt:
+        print(f"\nstopped after {swept} sweeps")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
