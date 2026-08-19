@@ -99,9 +99,11 @@ def test_record_once_writes_one_row_per_quoted_market(tmp_path):
     assert all(r["ts"] == 99 for r in rows)
 
 
-def test_a_dead_series_does_not_abort_the_sweep(tmp_path):
+def test_a_dead_series_does_not_abort_the_sweep(tmp_path, capsys):
     """Invariant J: announce, do not crash. One bad series must not lose the
-    whole recording pass."""
+    whole recording pass -- and the skip must be ANNOUNCED, not swallowed,
+    or a silent gap in the recording is indistinguishable from a quiet
+    market."""
     import book_recorder
 
     def fake_all_open(client, series):
@@ -118,4 +120,8 @@ def test_a_dead_series_does_not_abort_the_sweep(tmp_path):
         n = record_once(object(), ["KXBAD", "KXGOOD"], p, ts=1)
     finally:
         book_recorder._all_open_markets = original
+
     assert n == 1
+    printed = capsys.readouterr().out
+    assert "KXBAD" in printed, "the skipped series must be named on stdout"
+    assert "RuntimeError" in printed, "the failure type must be announced"

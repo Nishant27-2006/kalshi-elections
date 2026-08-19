@@ -47,3 +47,4 @@ config/api_keys_required.md
 state/_*
 state/scan_*.json
 state/seen.json
+state/book_recording*.jsonl
