@@ -334,8 +334,11 @@ def test_a_result_driven_by_one_event_is_flagged_as_concentrated():
 def test_a_broadly_earned_result_is_not_flagged():
     """The check must not condemn a strategy that wins evenly -- otherwise it
     rejects the very thing the fund is looking for."""
-    trades = [Trade(1, f"G{i}", "S", 50.0, 52.0, 2.0, 0.5) for i in range(40)]
+    # note the exit must clear the ~7% round-trip cost at 50c, or this is a
+    # LOSING strategy and the metric correctly refuses to attribute it
+    trades = [Trade(1, f"G{i}", "S", 50.0, 60.0, 2.0, 0.5) for i in range(40)]
     r = Result(name="x", trades=trades)
+    assert r.mean_return > 0, "fixture must actually be profitable"
     assert r.top_5pct_pnl_share == pytest.approx(0.05, abs=0.02)
 
 
@@ -352,3 +355,14 @@ def test_distinct_events_counts_games_not_legs():
 def test_concentration_is_none_when_there_is_nothing_to_measure():
     assert Result(name="x", trades=[]).top_5pct_pnl_share is None
     assert Result(name="x", trades=[]).mean_return_ex_top_5pct is None
+
+
+def test_concentration_is_not_reported_for_a_losing_strategy():
+    """Dividing a top-5% sum by a NEGATIVE total gives values like -105%,
+    which reads as a percentage and is not one. The metric answers 'is the
+    PROFIT the work of a few trades'; a strategy with no profit has nothing
+    to attribute."""
+    losers = [Trade(1, f"G{i}", "S", 51.0, 49.0, 2.0, 0.5) for i in range(40)]
+    r = Result(name="x", trades=losers)
+    assert r.mean_return < 0
+    assert r.top_5pct_pnl_share is None

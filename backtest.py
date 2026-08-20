@@ -194,7 +194,11 @@ class Result:
             return None
         rets = sorted(t.net_return for t in self.trades)
         total = sum(rets)
-        if total == 0:
+        if total <= 0:
+            # The question this metric answers is "is the PROFIT the work
+            # of a handful of trades". A strategy that loses overall has no
+            # profit to attribute, and dividing by a negative total yields
+            # nonsense like -105%, which reads as a number and is not one.
             return None
         k = max(1, len(rets) // 20)
         return sum(rets[-k:]) / total
@@ -474,6 +478,10 @@ def report(res: Result, seconds_per_bucket: float, label: str) -> None:
     print(f"  mean net return       {_fmt(res.mean_return, pct=True, nd=5)}"
           f"   (per trade, on capital deployed)")
     share = res.top_5pct_pnl_share
+    if share is None and res.trades:
+        print(f"  top 5% PnL share      n/a (net negative -- no profit to "
+              f"attribute)")
+        print(f"  distinct events       {res.distinct_events}")
     if share is not None:
         warn = "   <- ONE EVENT WEARING A STRATEGY'S CLOTHES" if share > 0.8 else ""
         print(f"  top 5% PnL share      {share*100:.0f}%{warn}")
