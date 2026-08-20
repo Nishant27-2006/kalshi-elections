@@ -440,6 +440,26 @@ def report(res: Result, seconds_per_bucket: float, label: str) -> None:
               f"   (after {res.n_configs_tried} configs tried)")
 
 
+def cost_table(spread_c: float = 1.0) -> list[tuple[float, float, float, float]]:
+    """Round-trip cost of a flat market, by price. (price, spread%, fee%, total%)
+
+    THE FINDING THIS EXISTS TO SHOW: on Kalshi the FEE dominates the
+    spread, not the other way round. At 50c on a 1c book the spread costs
+    1.98% and the fee costs 6.93%. Because the fee is 0.07*P*(1-P) it is
+    largest exactly at the mid prices where the liquid books trade, and it
+    nearly vanishes at the extremes. Cost is therefore MINIMISED on heavy
+    favourites, which is the opposite of where a spread-only intuition
+    would send you.
+    """
+    out = []
+    for px in (5, 10, 25, 50, 75, 90, 95):
+        ask, bid = px + spread_c / 2.0, px - spread_c / 2.0
+        t = Trade(ts=0, ticker="", series="", entry_ask_c=ask,
+                  exit_bid_c=bid, spread_c=spread_c, ru=1.0)
+        out.append((float(px), t.spread_cost, t.fee_drag, -t.net_return))
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--recording", default="state/book_recording.jsonl")
@@ -464,6 +484,16 @@ def main() -> int:
     print(f"train {first}..{cut} ({cut - first}s)   "
           f"test {cut}..{last} ({last - cut}s)")
     print(f"horizon {args.horizon} snapshots = {args.horizon * step:.0f}s held")
+
+    print("\n=== WHAT A ROUND TRIP COSTS ON A FLAT MARKET (1c book) ===")
+    print(f"  {'price':>7}{'spread':>9}{'fee':>9}{'total':>9}")
+    for px, sc, fd, tot in cost_table(1.0):
+        print(f"  {px:>6.0f}c{sc*100:>8.2f}%{fd*100:>8.2f}%{tot*100:>8.2f}%")
+    print("  The FEE dominates, and it peaks at 50c. Cost is lowest on "
+          "heavy favourites.")
+    print("  A resting LIMIT order pays neither the spread nor the taker "
+          "fee -- which is the")
+    print("  only structural way out of this table.")
 
     print("\n=== HORIZON SWEEP: does holding longer earn the cost back? ===")
     print(f"  {'bars':>5} {'held':>7} {'n':>7} {'direction':>11} {'cost':>9} "

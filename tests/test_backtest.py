@@ -279,3 +279,36 @@ def test_the_null_strategy_on_a_rising_market_still_pays_the_spread():
     assert res.n > 0
     # a 1c mid rise against a 2c spread is still a loss
     assert res.mean_return < 0
+
+
+# --------------------------------------------------------------- cost table
+
+def test_the_fee_dominates_the_spread_at_mid_prices():
+    """The finding that changes where the fund should trade. On a 1c book at
+    50c the spread costs about 2% and the fee about 7% -- so a strategy tuned
+    to avoid wide spreads while ignoring the fee is optimising the smaller
+    of the two costs."""
+    from backtest import cost_table
+    rows = {int(px): (sc, fd, tot) for px, sc, fd, tot in cost_table(1.0)}
+    spread_50, fee_50, _ = rows[50]
+    assert fee_50 > spread_50 * 3, "the fee is the dominant cost at 50c"
+
+
+def test_round_trip_cost_is_lowest_on_heavy_favourites():
+    """Because the fee is 0.07*P*(1-P) it nearly vanishes at the extremes,
+    while the spread as a FRACTION of price also falls as price rises. Cost
+    is therefore minimised on favourites -- the opposite of where a
+    spread-only intuition sends you."""
+    from backtest import cost_table
+    rows = {int(px): tot for px, _, _, tot in cost_table(1.0)}
+    assert rows[90] < rows[50] < rows[25] < rows[10]
+    assert rows[5] > 0.25, "a 5c contract costs over 25% to round-trip"
+    assert rows[90] < 0.03, "a 90c contract costs under 3%"
+
+
+def test_the_cost_table_widens_with_the_spread():
+    from backtest import cost_table
+    tight = {int(px): tot for px, _, _, tot in cost_table(1.0)}
+    wide = {int(px): tot for px, _, _, tot in cost_table(4.0)}
+    for px in tight:
+        assert wide[px] > tight[px]
