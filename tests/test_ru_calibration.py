@@ -45,7 +45,7 @@ def test_an_empty_sample_reports_no_rate_rather_than_zero():
 
 import json
 
-from ru_calibration import calibrate, load_recording
+from ru_calibration import calibrate, load_recording, excursion_scaling
 
 
 def _row(ticker, ts, bid, ask, series=None):
@@ -222,3 +222,67 @@ def test_execution_stays_disabled_throughout_this_plan():
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
     from agent.risk import RISK
     assert RISK.is_live() is False
+
+
+# ------------------------------------------------- excursion scaling fit
+
+def _walk_recording(alpha, k=0.001, n_bars=30, n_tickers=60, step=18):
+    """Synthetic paths whose mean adverse excursion grows as k * t**alpha."""
+    out = {}
+    for j in range(n_tickers):
+        rows = [_row(f"KXMLBGAME-{j}", 1, 49, 51, series="KXMLBGAME")]
+        for b in range(1, n_bars):
+            drop = k * ((b * step) ** alpha) * 100.0
+            # alternate sign so half the names fall and half rise; the
+            # excursion measure only sees the falls
+            px = 51 - drop if j % 2 == 0 else 51 + drop
+            rows.append(_row(f"KXMLBGAME-{j}", b + 1, px - 2, px,
+                             series="KXMLBGAME"))
+        out[f"KXMLBGAME-{j}"] = rows
+    return out
+
+
+def test_the_scaling_fit_recovers_a_known_exponent():
+    """If the fit cannot recover an exponent it was handed, no number it
+    produces about real data means anything."""
+    fit = excursion_scaling(_walk_recording(alpha=0.5), min_sample=10)
+    assert fit is not None
+    assert fit.alpha == pytest.approx(0.5, abs=0.05)
+
+    trending = excursion_scaling(_walk_recording(alpha=0.8), min_sample=10)
+    assert trending.alpha == pytest.approx(0.8, abs=0.05)
+
+
+def test_a_trending_market_is_distinguishable_from_a_random_walk():
+    """alpha > 0.5 means moves PERSIST. That is simultaneously the regime a
+    momentum strategy needs and the regime where a risk measure fitted on
+    short windows understates long holds. Confusing the two is how a fund
+    talks itself into size."""
+    walk = excursion_scaling(_walk_recording(alpha=0.5), min_sample=10)
+    trend = excursion_scaling(_walk_recording(alpha=0.9), min_sample=10)
+    assert trend.alpha > walk.alpha + 0.2
+
+
+def test_the_fit_reports_how_far_an_answer_is_extrapolated():
+    """Asking a fit built on 8 minutes about a 24-hour hold is a 180x
+    extrapolation. The caller must be able to see that rather than reading
+    the answer as a measurement."""
+    fit = excursion_scaling(_walk_recording(alpha=0.5), min_sample=10)
+    assert fit.extrapolation_factor(fit.fitted_to_s) == pytest.approx(1.0)
+    assert fit.extrapolation_factor(fit.fitted_to_s * 200) == pytest.approx(200.0)
+
+
+def test_the_fit_refuses_a_recording_too_short_to_fit():
+    """Three points is not a curve. Returning a confident exponent from two
+    bars would be the worst kind of invented number."""
+    assert excursion_scaling({}, min_sample=1) is None
+    tiny = {"A": [_row("A", 1, 49, 51, series="KXMLBGAME"),
+                  _row("A", 2, 48, 50, series="KXMLBGAME")]}
+    assert excursion_scaling(tiny, min_sample=1) is None
+
+
+def test_excursion_at_is_the_fitted_power_law():
+    fit = excursion_scaling(_walk_recording(alpha=0.6), min_sample=10)
+    assert fit.excursion_at(100.0) == pytest.approx(fit.k * 100.0 ** fit.alpha)
+    # and it is monotonically increasing in time
+    assert fit.excursion_at(1000.0) > fit.excursion_at(100.0)

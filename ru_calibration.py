@@ -49,10 +49,11 @@ from __future__ import annotations
 import argparse
 import json
 from collections import defaultdict
+import math
 from dataclasses import dataclass
 from pathlib import Path
 
-from agent.risk_unit import ru_per_contract
+from agent.risk_unit import ru_per_contract, MIN_PRICE_DOLLARS
 from agent.void_rates import DEFAULT_VOID_RATE, vertical_for_series, void_rate_for_series
 
 
@@ -208,6 +209,88 @@ def calibrate(by_ticker: dict[str, list[dict]],
             for v, obs in obs_by_vertical.items()}
 
 
+@dataclass(frozen=True)
+class ScalingFit:
+    """Realised adverse excursion fitted as `k * t**alpha`, t in seconds.
+
+    alpha is the diagnostic. A pure random walk gives 0.5. Above 0.5 the
+    market TRENDS -- moves persist rather than mean-revert -- which is
+    exactly the regime a momentum strategy needs, and also the regime in
+    which a risk measure calibrated on short windows understates long holds.
+    """
+    k: float
+    alpha: float
+    n_points: int
+    fitted_from_s: float
+    fitted_to_s: float
+
+    def excursion_at(self, seconds: float) -> float:
+        return self.k * (seconds ** self.alpha)
+
+    def extrapolation_factor(self, seconds: float) -> float:
+        """How far beyond the fitted data a query reaches.
+
+        A factor of 180 means the answer is an extrapolation across more than
+        two orders of magnitude and should be treated as an estimate with a
+        wide error bar, not a measurement.
+        """
+        if self.fitted_to_s <= 0:
+            return float("inf")
+        return seconds / self.fitted_to_s
+
+
+def excursion_scaling(by_ticker: dict[str, list[dict]],
+                      min_sample: int = 50) -> ScalingFit | None:
+    """Fit realised excursion against holding time by least squares in logs.
+
+    WHY THIS EXISTS: RU is a to-SETTLEMENT risk measure, but an intraday
+    recording only shows minutes. Comparing the two directly makes RU look
+    absurdly conservative when the real story is that the holding periods do
+    not match. Fitting the growth curve is what makes them comparable.
+    """
+    ts = sorted({r["ts"] for rows in by_ticker.values() for r in rows})
+    if len(ts) < 4:
+        return None
+    steps = [b - a for a, b in zip(ts, ts[1:])]
+    step = sorted(steps)[len(steps) // 2]
+    if step <= 0:
+        return None
+
+    pts: list[tuple[float, float]] = []
+    for h in range(1, len(ts) - 1):
+        vals = []
+        for ticker, rows in by_ticker.items():
+            if len(rows) < h + 1:
+                continue
+            entry, path = rows[0], rows[1:1 + h]
+            ask = entry.get("yes_ask_c")
+            if ask is None or ask < MIN_PRICE_DOLLARS * 100.0:
+                continue
+            asks = [x["yes_ask_c"] for x in path
+                    if x.get("yes_ask_c") is not None]
+            if not asks:
+                continue
+            vals.append(adverse_excursion(ask, asks))
+        if len(vals) >= min_sample:
+            m = sum(vals) / len(vals)
+            if m > 0:
+                pts.append((h * step, m))
+    if len(pts) < 3:
+        return None
+
+    xs = [math.log(t) for t, _ in pts]
+    ys = [math.log(v) for _, v in pts]
+    n = len(xs)
+    mx, my = sum(xs) / n, sum(ys) / n
+    denom = sum((a - mx) ** 2 for a in xs)
+    if denom == 0:
+        return None
+    alpha = sum((a - mx) * (b - my) for a, b in zip(xs, ys)) / denom
+    k = math.exp(my - alpha * mx)
+    return ScalingFit(k=k, alpha=alpha, n_points=n,
+                      fitted_from_s=pts[0][0], fitted_to_s=pts[-1][0])
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--recording", default="state/book_recording.jsonl")
@@ -233,6 +316,33 @@ def main() -> int:
               f"{s.nominal:8.1%}")
     print("\nA rate far ABOVE nominal means RU is under-stating risk; far "
           "BELOW means it is over-stating and positions are too small.")
+
+    fit = excursion_scaling(by_ticker)
+    if fit is None:
+        print("\nNot enough of a recording to fit the excursion curve.")
+        return 0
+
+    print("\n=== HOW EXCURSION GROWS WITH HOLDING TIME ===")
+    print(f"  fitted on {fit.n_points} horizons from {fit.fitted_from_s:.0f}s "
+          f"to {fit.fitted_to_s:.0f}s")
+    print(f"  excursion = {fit.k:.6f} * t^{fit.alpha:.3f}")
+    shape = ("TRENDING, moves persist" if fit.alpha > 0.55
+             else "mean-reverting" if fit.alpha < 0.45 else "walk-like")
+    print(f"  alpha {fit.alpha:.3f} vs 0.500 for a random walk -- {shape}")
+    print("\n  hold      excursion  extrapolation  verdict vs a 0.40 RU")
+    for label, secs in (("1 min", 60), ("1 hour", 3600), ("3 hours", 10800),
+                        ("1 day", 86400), ("1 week", 604800)):
+        e = fit.excursion_at(secs)
+        f = fit.extrapolation_factor(secs)
+        verdict = ("RU far too big" if e < 0.20 else
+                   "RU about right" if e < 0.60 else "RU TOO SMALL")
+        flag = "" if f <= 3 else (" (est.)" if f <= 30 else " (WIDE EST.)")
+        print(f"  {label:9} {e:9.4f} {f:11.0f}x{flag:13} {verdict}")
+    print("\n  RU is a to-SETTLEMENT measure, so intraday snapshots cannot "
+          "validate it directly.")
+    print("  This curve is what makes the two horizons comparable. Past "
+          "~30x extrapolation")
+    print("  it is an estimate with a wide error bar, not a measurement.")
     return 0
 
 
