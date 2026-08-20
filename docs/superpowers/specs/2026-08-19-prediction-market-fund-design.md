@@ -439,6 +439,45 @@ met, informed by what Plan 1 measures.
 
 ---
 
+## 10b. Plan 2 entry gate — MEASURED, unresolved
+
+Plan 1 shipped and its RU calibration harness works, but running it against
+a recording does NOT currently certify the risk model. Measured from the
+shipped formula:
+
+`SIGMA_MULTIPLE = 2.0` makes predicted RU EXCEED the maximum loss a YES
+contract can take, so across much of the price range a breach is
+arithmetically impossible rather than merely rare. The affected region
+depends on the spread and is not contiguous at tight ones — `mlb_game` at a
+2c spread is breachable from about 3.1c to 32c and impossible from 32c to
+63.3c, while the same series on an 8c book is impossible from 3c to 69.2c.
+
+Worse, the effect is LARGEST where discrimination matters most. A higher
+void rate and wider quotes raise predicted RU, so `esports_series` has a
+wider no-breach zone than `mlb_game` at every spread. Section 7.3's stated
+falsifiable claim — that esports should breach more often than MLB — is
+inverted by construction.
+
+Cause: for a bounded binary, a two-sigma move is definitionally the entire
+distance to settlement; at 50c the volatility term alone equals the whole
+capital. No ceiling on RU repairs this. Only a smaller multiple does, and
+that halves RU and therefore DOUBLES every position size.
+
+**Decision taken 2026-08-19: leave `SIGMA_MULTIPLE` at 2.0 and document.**
+No capital is at risk in Plan 1, and the error direction is conservative
+(over-stated risk, under-sized positions). Per section 7.4, parameter
+revision belongs to the monthly human-approved offline re-fit, not to an
+agent mid-plan.
+
+**Binding on Plan 2:** a clean calibration run at mid prices is
+UNINFORMATIVE, not evidence the RU is sound. Before Plan 2 sizes anything
+with real capital, either re-fit the multiple against recorded books, or
+restrict RU-certified trading to the price bands where a breach is
+measurable. Do not read section 7.3's output as a green light until one of
+those has happened.
+
+---
+
 ## 11. Kill criteria
 
 Stated before any capital is deployed, so they cannot be rationalised away
