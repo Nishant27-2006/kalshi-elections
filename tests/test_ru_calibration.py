@@ -45,7 +45,8 @@ def test_an_empty_sample_reports_no_rate_rather_than_zero():
 
 import json
 
-from ru_calibration import calibrate, load_recording, excursion_scaling
+from ru_calibration import (calibrate, load_recording, excursion_scaling,
+                            excursion_points, ScalingFit)
 
 
 def _row(ticker, ts, bid, ask, series=None):
@@ -286,3 +287,68 @@ def test_excursion_at_is_the_fitted_power_law():
     assert fit.excursion_at(100.0) == pytest.approx(fit.k * 100.0 ** fit.alpha)
     # and it is monotonically increasing in time
     assert fit.excursion_at(1000.0) > fit.excursion_at(100.0)
+
+
+def _saturating_recording(n_bars=40, n_tickers=60, step=18, cap=0.05):
+    """Paths whose excursion grows then FLATTENS -- no power law fits."""
+    out = {}
+    for j in range(n_tickers):
+        rows = [_row(f"KXMLBGAME-{j}", 1, 49, 51, series="KXMLBGAME")]
+        for b in range(1, n_bars):
+            # saturating: approaches `cap` and stops
+            drop = cap * (1 - 2.718 ** (-b / 4.0)) * 100.0
+            px = 51 - drop if j % 2 == 0 else 51 + drop
+            rows.append(_row(f"KXMLBGAME-{j}", b + 1, px - 2, px,
+                             series="KXMLBGAME"))
+        out[f"KXMLBGAME-{j}"] = rows
+    return out
+
+
+def test_a_genuine_power_law_is_reported_as_stable():
+    """The stability check must not cry wolf: data that really is scale-free
+    has to pass, or the harness refuses to extrapolate from anything."""
+    fit = excursion_scaling(_walk_recording(alpha=0.5, n_bars=40),
+                            min_sample=10)
+    assert fit.stable is True
+    assert fit.r_squared > 0.95
+    assert abs(fit.alpha - fit.alpha_half_window) < 0.10
+
+
+def test_a_saturating_curve_is_caught_as_not_scale_free():
+    """THE DEFECT THIS EXISTS TO PREVENT. Excursion that flattens is not a
+    power law, but least squares will still hand back a confident-looking
+    exponent. Fitted on the first eighth of the real recording that exponent
+    read 0.68 -- 'the market trends' -- and on the whole recording 0.44 --
+    'the market mean-reverts'. Sizing on the first number would buy a trend
+    that is not there."""
+    fit = excursion_scaling(_saturating_recording(), min_sample=10)
+    assert fit is not None
+    assert fit.stable is False, "a saturating curve must not read as stable"
+    assert fit.saturating is True
+    assert fit.alpha_half_window > fit.alpha, "early horizons look steeper"
+
+
+def test_the_exponent_from_a_saturating_curve_depends_on_the_window():
+    """Concretely: the same data fitted over two ranges gives two different
+    exponents. That is the definition of a misspecified model."""
+    rec = _saturating_recording(n_bars=40)
+    short = {k: v[:12] for k, v in rec.items()}
+    full = excursion_scaling(rec, min_sample=10)
+    part = excursion_scaling(short, min_sample=10)
+    assert abs(part.alpha - full.alpha) > 0.10
+
+
+def test_stability_requires_both_a_matching_exponent_and_a_good_fit():
+    """Either failure alone is disqualifying."""
+    good = ScalingFit(k=1e-4, alpha=0.50, n_points=50, fitted_from_s=18,
+                      fitted_to_s=900, r_squared=0.99,
+                      alpha_half_window=0.52)
+    assert good.stable is True
+    drifting = ScalingFit(k=1e-4, alpha=0.44, n_points=50, fitted_from_s=18,
+                          fitted_to_s=900, r_squared=0.99,
+                          alpha_half_window=0.63)
+    assert drifting.stable is False
+    noisy = ScalingFit(k=1e-4, alpha=0.50, n_points=50, fitted_from_s=18,
+                       fitted_to_s=900, r_squared=0.70,
+                       alpha_half_window=0.51)
+    assert noisy.stable is False

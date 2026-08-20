@@ -213,49 +213,85 @@ def calibrate(by_ticker: dict[str, list[dict]],
 class ScalingFit:
     """Realised adverse excursion fitted as `k * t**alpha`, t in seconds.
 
-    alpha is the diagnostic. A pure random walk gives 0.5. Above 0.5 the
-    market TRENDS -- moves persist rather than mean-revert -- which is
-    exactly the regime a momentum strategy needs, and also the regime in
-    which a risk measure calibrated on short windows understates long holds.
+    READ `stable` BEFORE READING `alpha`. Measured on 37 minutes of live
+    books, the fitted exponent slides monotonically from 0.98 to 0.44 as the
+    fitting window is extended, and R^2 falls from 0.95 to 0.82. A single
+    power law DOES NOT describe this data: excursion grows quickly at short
+    horizons and then SATURATES, which is concave in log-log and cannot be
+    captured by one exponent.
+
+    That matters because the naive reading is backwards. Fitted on the first
+    8 minutes alone the exponent is 0.68 and the market looks like it TRENDS
+    -- the regime a momentum strategy needs. Fitted on the full recording it
+    is 0.44 and the market MEAN-REVERTS. The first number is an artefact of
+    the window, and a fund that sized on it would have bought a trend that
+    is not there.
+
+    When `stable` is False, `alpha` describes the fitted window and nothing
+    beyond it, and `excursion_at` must not be used to extrapolate.
     """
     k: float
     alpha: float
     n_points: int
     fitted_from_s: float
     fitted_to_s: float
+    r_squared: float
+    alpha_half_window: float
+
+    @property
+    def stable(self) -> bool:
+        """True when halving the fitting window barely moves the exponent.
+
+        A power law is scale-free: fitted on half the range it must give the
+        same exponent. When it does not, the model is misspecified and no
+        extrapolation from it is trustworthy.
+        """
+        return (abs(self.alpha - self.alpha_half_window) <= 0.10
+                and self.r_squared >= 0.95)
+
+    @property
+    def saturating(self) -> bool:
+        """Excursion is flattening: the half-window exponent exceeds the
+        full-window one, so later horizons add less than earlier ones."""
+        return self.alpha_half_window > self.alpha + 0.10
 
     def excursion_at(self, seconds: float) -> float:
         return self.k * (seconds ** self.alpha)
 
     def extrapolation_factor(self, seconds: float) -> float:
-        """How far beyond the fitted data a query reaches.
-
-        A factor of 180 means the answer is an extrapolation across more than
-        two orders of magnitude and should be treated as an estimate with a
-        wide error bar, not a measurement.
-        """
+        """How far beyond the fitted data a query reaches."""
         if self.fitted_to_s <= 0:
             return float("inf")
         return seconds / self.fitted_to_s
 
 
-def excursion_scaling(by_ticker: dict[str, list[dict]],
-                      min_sample: int = 50) -> ScalingFit | None:
-    """Fit realised excursion against holding time by least squares in logs.
+def _fit_loglog(pts: list[tuple[float, float]]) -> tuple[float, float, float]:
+    """(alpha, k, r_squared) by least squares on log(t) vs log(excursion)."""
+    xs = [math.log(t) for t, _ in pts]
+    ys = [math.log(v) for _, v in pts]
+    n = len(xs)
+    mx, my = sum(xs) / n, sum(ys) / n
+    denom = sum((a - mx) ** 2 for a in xs)
+    if denom == 0:
+        return 0.0, 0.0, 0.0
+    alpha = sum((a - mx) * (b - my) for a, b in zip(xs, ys)) / denom
+    pred = [my + alpha * (x - mx) for x in xs]
+    ssr = sum((b - q) ** 2 for b, q in zip(ys, pred))
+    sst = sum((b - my) ** 2 for b in ys)
+    r2 = 1.0 - ssr / sst if sst > 0 else 0.0
+    return alpha, math.exp(my - alpha * mx), r2
 
-    WHY THIS EXISTS: RU is a to-SETTLEMENT risk measure, but an intraday
-    recording only shows minutes. Comparing the two directly makes RU look
-    absurdly conservative when the real story is that the holding periods do
-    not match. Fitting the growth curve is what makes them comparable.
-    """
+
+def excursion_points(by_ticker: dict[str, list[dict]],
+                     min_sample: int = 50) -> list[tuple[float, float]]:
+    """(holding_seconds, mean realised excursion) across every horizon."""
     ts = sorted({r["ts"] for rows in by_ticker.values() for r in rows})
     if len(ts) < 4:
-        return None
+        return []
     steps = [b - a for a, b in zip(ts, ts[1:])]
     step = sorted(steps)[len(steps) // 2]
     if step <= 0:
-        return None
-
+        return []
     pts: list[tuple[float, float]] = []
     for h in range(1, len(ts) - 1):
         vals = []
@@ -275,20 +311,26 @@ def excursion_scaling(by_ticker: dict[str, list[dict]],
             m = sum(vals) / len(vals)
             if m > 0:
                 pts.append((h * step, m))
+    return pts
+
+
+def excursion_scaling(by_ticker: dict[str, list[dict]],
+                      min_sample: int = 50) -> ScalingFit | None:
+    """Fit excursion against holding time, AND check the fit is scale-free.
+
+    The half-window refit is the whole point. A power law fitted on half the
+    range must return the same exponent; when it does not, one exponent is
+    the wrong model and every extrapolation off it is invented precision.
+    """
+    pts = excursion_points(by_ticker, min_sample)
     if len(pts) < 3:
         return None
-
-    xs = [math.log(t) for t, _ in pts]
-    ys = [math.log(v) for _, v in pts]
-    n = len(xs)
-    mx, my = sum(xs) / n, sum(ys) / n
-    denom = sum((a - mx) ** 2 for a in xs)
-    if denom == 0:
-        return None
-    alpha = sum((a - mx) * (b - my) for a, b in zip(xs, ys)) / denom
-    k = math.exp(my - alpha * mx)
-    return ScalingFit(k=k, alpha=alpha, n_points=n,
-                      fitted_from_s=pts[0][0], fitted_to_s=pts[-1][0])
+    alpha, k, r2 = _fit_loglog(pts)
+    half = pts[:max(3, len(pts) // 2)]
+    alpha_half, _, _ = _fit_loglog(half)
+    return ScalingFit(k=k, alpha=alpha, n_points=len(pts),
+                      fitted_from_s=pts[0][0], fitted_to_s=pts[-1][0],
+                      r_squared=r2, alpha_half_window=alpha_half)
 
 
 def main() -> int:
@@ -323,12 +365,39 @@ def main() -> int:
         return 0
 
     print("\n=== HOW EXCURSION GROWS WITH HOLDING TIME ===")
-    print(f"  fitted on {fit.n_points} horizons from {fit.fitted_from_s:.0f}s "
+    print(f"  fitted on {fit.n_points} horizons, {fit.fitted_from_s:.0f}s "
           f"to {fit.fitted_to_s:.0f}s")
-    print(f"  excursion = {fit.k:.6f} * t^{fit.alpha:.3f}")
-    shape = ("TRENDING, moves persist" if fit.alpha > 0.55
-             else "mean-reverting" if fit.alpha < 0.45 else "walk-like")
-    print(f"  alpha {fit.alpha:.3f} vs 0.500 for a random walk -- {shape}")
+    print(f"  excursion = {fit.k:.6f} * t^{fit.alpha:.3f}   (R^2 {fit.r_squared:.3f})")
+    print(f"  same fit on HALF the range gives alpha {fit.alpha_half_window:.3f}")
+
+    if not fit.stable:
+        print("\n  THE FIT IS NOT SCALE-FREE, so a single exponent is the "
+              "WRONG MODEL here.")
+        print(f"  Halving the window moves alpha by "
+              f"{abs(fit.alpha - fit.alpha_half_window):.3f}; a real power "
+              f"law would not move at all.")
+        if fit.saturating:
+            print("  Excursion SATURATES: it grows quickly early and then "
+                  "flattens, which is")
+            print("  mean reversion, not a trend. Fitted on the first "
+                  "eighth of this recording")
+            print("  alone the exponent reads 0.68 and the market looks "
+                  "like it TRENDS -- the")
+            print("  regime a momentum strategy needs. It does not. That "
+                  "number is an artefact")
+            print("  of the window, and sizing on it would buy a trend "
+                  "that is not there.")
+        print("\n  Refusing to extrapolate. Measured values only:")
+        pts = excursion_points(by_ticker)
+        for t_s, e in pts:
+            if t_s in (pts[0][0], pts[len(pts)//4][0], pts[len(pts)//2][0],
+                       pts[-1][0]):
+                print(f"    {t_s:7.0f}s held -> excursion {e:.4f}"
+                      f"   vs a 0.40 RU: RU is {0.40/e:5.1f}x larger")
+        print("  To learn what RU should be at settlement, record to "
+              "settlement. Spec 10b.")
+        return 0
+
     print("\n  hold      excursion  extrapolation  verdict vs a 0.40 RU")
     for label, secs in (("1 min", 60), ("1 hour", 3600), ("3 hours", 10800),
                         ("1 day", 86400), ("1 week", 604800)):
@@ -338,11 +407,6 @@ def main() -> int:
                    "RU about right" if e < 0.60 else "RU TOO SMALL")
         flag = "" if f <= 3 else (" (est.)" if f <= 30 else " (WIDE EST.)")
         print(f"  {label:9} {e:9.4f} {f:11.0f}x{flag:13} {verdict}")
-    print("\n  RU is a to-SETTLEMENT measure, so intraday snapshots cannot "
-          "validate it directly.")
-    print("  This curve is what makes the two horizons comparable. Past "
-          "~30x extrapolation")
-    print("  it is an estimate with a wide error bar, not a measurement.")
     return 0
 
 
