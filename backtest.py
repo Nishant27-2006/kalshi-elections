@@ -465,8 +465,7 @@ def main() -> int:
           f"test {cut}..{last} ({last - cut}s)")
     print(f"horizon {args.horizon} snapshots = {args.horizon * step:.0f}s held")
 
-    print("
-=== HORIZON SWEEP: does holding longer earn the cost back? ===")
+    print("\n=== HORIZON SWEEP: does holding longer earn the cost back? ===")
     print(f"  {'bars':>5} {'held':>7} {'n':>7} {'direction':>11} {'cost':>9} "
           f"{'net':>9} {'sharpe':>9}")
     max_h = max(1, min(12, len(all_ts) - 2))
