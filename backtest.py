@@ -177,6 +177,49 @@ class Result:
         return statistics.fmean(t.return_per_ru for t in self.trades)
 
     @property
+    def top_5pct_pnl_share(self) -> float | None:
+        """Fraction of total PnL contributed by the best 5% of trades.
+
+        THE CHECK THAT KILLED THIS PROJECT'S FIRST APPARENT EDGE. A momentum
+        configuration scored +15.9% per trade out of sample and looked like a
+        real strategy. Its top 5% -- twenty trades, every one of them on the
+        SAME baseball game, contracts running 17c to 99c as the total
+        resolved -- contributed 100% of the PnL. Strip them and the mean is
+        -0.07%.
+
+        A share near or above 1.0 means the result is one event wearing a
+        strategy's clothes, and no amount of Sharpe arithmetic will say so.
+        """
+        if not self.trades:
+            return None
+        rets = sorted(t.net_return for t in self.trades)
+        total = sum(rets)
+        if total == 0:
+            return None
+        k = max(1, len(rets) // 20)
+        return sum(rets[-k:]) / total
+
+    @property
+    def mean_return_ex_top_5pct(self) -> float | None:
+        """Mean net return with the best 5% of trades removed."""
+        if len(self.trades) < 20:
+            return None
+        rets = sorted(t.net_return for t in self.trades)
+        k = max(1, len(rets) // 20)
+        rest = rets[:-k]
+        return statistics.fmean(rest) if rest else None
+
+    @property
+    def distinct_events(self) -> int:
+        """How many distinct underlying events the trades touch.
+
+        Fifty trades across three baseball games is three observations, not
+        fifty. Kalshi tickers embed the event, so the prefix before the last
+        dash is a usable event key.
+        """
+        return len({t.ticker.rsplit("-", 1)[0] for t in self.trades})
+
+    @property
     def sharpe_per_bucket(self) -> float | None:
         """Sharpe across portfolio buckets -- the honest one.
 
@@ -430,6 +473,13 @@ def report(res: Result, seconds_per_bucket: float, label: str) -> None:
           f"   <- both legs, Kalshi schedule")
     print(f"  mean net return       {_fmt(res.mean_return, pct=True, nd=5)}"
           f"   (per trade, on capital deployed)")
+    share = res.top_5pct_pnl_share
+    if share is not None:
+        warn = "   <- ONE EVENT WEARING A STRATEGY'S CLOTHES" if share > 0.8 else ""
+        print(f"  top 5% PnL share      {share*100:.0f}%{warn}")
+        print(f"  mean ex-top-5%        "
+              f"{_fmt(res.mean_return_ex_top_5pct, pct=True, nd=5)}")
+        print(f"  distinct events       {res.distinct_events}")
     print(f"  mean RU / contract    {_fmt(res.mean_ru)}")
     print(f"  return per RU         {_fmt(res.return_per_ru, pct=True, nd=5)}")
     print(f"  SHARPE (per bucket)   {_fmt(res.sharpe_per_bucket)}")

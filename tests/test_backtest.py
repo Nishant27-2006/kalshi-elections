@@ -312,3 +312,43 @@ def test_the_cost_table_widens_with_the_spread():
     wide = {int(px): tot for px, _, _, tot in cost_table(4.0)}
     for px in tight:
         assert wide[px] > tight[px]
+
+
+# ------------------------------------------------------- PnL concentration
+
+def test_a_result_driven_by_one_event_is_flagged_as_concentrated():
+    """THE CHECK THAT KILLED THIS PROJECT'S FIRST APPARENT EDGE. A momentum
+    configuration scored +15.9% per trade out of sample. Its top 5% -- twenty
+    trades, every one on the SAME baseball game -- contributed 100% of the
+    PnL, and the mean without them was -0.07%. Sharpe alone never says this.
+    """
+    flat = [Trade(1, "GAME-A", "S", 50.0, 49.0, 2.0, 0.5) for _ in range(38)]
+    spike = [Trade(1, "GAME-A", "S", 17.0, 99.0, 2.0, 0.5) for _ in range(2)]
+    r = Result(name="x", trades=flat + spike)
+    assert r.top_5pct_pnl_share is not None
+    assert r.top_5pct_pnl_share > 0.8, "the spike must dominate the PnL"
+    assert r.mean_return_ex_top_5pct < 0, "strip it and the edge is gone"
+    assert r.mean_return > 0, "...even though the headline mean is positive"
+
+
+def test_a_broadly_earned_result_is_not_flagged():
+    """The check must not condemn a strategy that wins evenly -- otherwise it
+    rejects the very thing the fund is looking for."""
+    trades = [Trade(1, f"G{i}", "S", 50.0, 52.0, 2.0, 0.5) for i in range(40)]
+    r = Result(name="x", trades=trades)
+    assert r.top_5pct_pnl_share == pytest.approx(0.05, abs=0.02)
+
+
+def test_distinct_events_counts_games_not_legs():
+    """Fifty legs of one baseball game are ONE observation. Counting them as
+    fifty is how a sample size gets inflated by an order of magnitude."""
+    trades = ([Trade(1, "KXMLBTOTAL-26AUG19ATHKC-14", "S", 50, 51, 2, .5)] * 20
+              + [Trade(1, "KXMLBTOTAL-26AUG19ATHKC-15", "S", 50, 51, 2, .5)] * 20
+              + [Trade(1, "KXMLBGAME-26AUG19NYYBOS-NYY", "S", 50, 51, 2, .5)])
+    r = Result(name="x", trades=trades)
+    assert r.distinct_events == 2, "two games, not 41 trades"
+
+
+def test_concentration_is_none_when_there_is_nothing_to_measure():
+    assert Result(name="x", trades=[]).top_5pct_pnl_share is None
+    assert Result(name="x", trades=[]).mean_return_ex_top_5pct is None
