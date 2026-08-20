@@ -142,12 +142,17 @@ def portfolio_ru(positions: list[tuple[str, str, float]]) -> float:
     for i, (event, source, _ru) in enumerate(positions):
         node = f"pos:{i}"
         find(node)
-        # only link on values that exist -- blank fields must not merge every
-        # unlabelled position into one giant cluster
-        if event:
-            union(node, f"event:{event}")
-        if source:
-            union(node, f"source:{source}")
+        # Normalise before keying: "ATP", "atp" and "ATP " must land in the
+        # same cluster, or a caller typo silently buys diversification
+        # credit and under-groups correlated risk -- the dangerous
+        # direction. Blank fields must still not merge unrelated positions,
+        # which is why the emptiness check runs on the normalised value.
+        event_key = event.strip().upper() if event else event
+        source_key = source.strip().upper() if source else source
+        if event_key:
+            union(node, f"event:{event_key}")
+        if source_key:
+            union(node, f"source:{source_key}")
 
     totals: dict[str, float] = defaultdict(float)
     for i, (_event, _source, ru) in enumerate(positions):

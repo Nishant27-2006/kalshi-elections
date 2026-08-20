@@ -38,10 +38,25 @@ def test_size_fields_are_read_from_the_fp_strings():
 
 
 def test_the_plain_field_names_are_ignored_even_if_present():
-    """Guards against a future payload where both exist and disagree."""
+    """Guards against a future payload where both forms exist and disagree.
+
+    The plain price keys (`yes_bid`, `yes_ask`) are the dangerous case: if
+    they won instead of the `_dollars` forms, a disagreeing pair could
+    produce a negative spread, which reaches ru_per_contract(spread_cents=
+    negative) and raises an uncaught ValueError that aborts a whole replay.
+    """
     snap = snapshot_from_market(
-        _market(open_interest=1.0, volume_24h=2.0), ts=1)
+        _market(open_interest=1.0, volume_24h=2.0,
+               # plain keys disagree with the _dollars forms, and in a
+               # direction that would go negative if they won: a lower ask
+               # than bid.
+               yes_bid=90.0, yes_ask=10.0),
+        ts=1)
     assert snap["oi"] == 6460.04
+    assert snap["yes_bid_c"] == 45.0
+    assert snap["yes_ask_c"] == 47.0
+    assert snap["spread_c"] == 2.0
+    assert snap["spread_c"] >= 0
 
 
 def test_a_market_with_no_quotes_is_dropped():

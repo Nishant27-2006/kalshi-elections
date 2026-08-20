@@ -38,6 +38,22 @@ def test_the_no_side_uses_its_own_capital_at_risk():
     assert no_at_90 < yes_at_90
 
 
+def test_the_no_side_capital_at_risk_is_pinned_to_10c_not_90c():
+    """Ordering alone (no_at_90 < yes_at_90) does not pin the NO-side capital
+    magnitude -- it would pass just as well if capital were mistakenly halved
+    or otherwise scaled down. By hand, at price=0.90 side='no':
+
+        capital   = 1 - 0.90                        = 0.10
+        sigma     = sqrt(0.90 * 0.10)                = 0.3
+        vol_term  = capital * SIGMA_MULTIPLE * sigma = 0.10 * 2.0 * 0.3  = 0.06
+        cost_term = 0.5 * 2 / 100 + FEE_PER_CONTRACT_USD (0.01)         = 0.02
+        void_term = capital * void_rate (0.005)                        = 0.0005
+        RU        = 0.06 + 0.02 + 0.0005                                = 0.0805
+    """
+    no_at_90 = ru_per_contract(0.90, spread_cents=2.0, void_rate=0.005, side="no")
+    assert no_at_90 == pytest.approx(0.0805)
+
+
 def test_on_a_cheap_contract_a_wide_book_costs_more_than_the_position_moves():
     """Measured spreads run 5-9c on deep futures books and 23-79c on illiquid
     court rungs. On a cheap contract the round-trip cost EXCEEDS the whole
@@ -172,6 +188,14 @@ def test_clustering_is_transitive():
 def test_blank_fields_do_not_merge_unrelated_positions():
     """Two positions with no event and no source are not thereby related."""
     assert portfolio_ru([("", "", 3.0), ("", "", 4.0)]) == pytest.approx(5.0)
+
+
+def test_labels_that_differ_only_in_case_or_whitespace_still_cluster():
+    """A caller typo ("atp" vs "ATP", or a trailing space) must not silently
+    buy diversification credit -- under-grouping understates correlated
+    risk, which is the dangerous direction."""
+    assert portfolio_ru([("E1", "ATP", 3.0), ("E2", "atp", 4.0)]) == pytest.approx(7.0)
+    assert portfolio_ru([("E1", "ATP", 3.0), ("E2", "ATP ", 4.0)]) == pytest.approx(7.0)
 
 
 def test_an_empty_book_carries_no_risk():

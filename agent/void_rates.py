@@ -34,8 +34,13 @@ VOID_RATES: dict[str, float] = {
 # optimistic number, so the fallback is the WORST observed rate.
 DEFAULT_VOID_RATE: float = max(VOID_RATES.values())
 
-# Series prefix -> vertical. Order matters: longer prefixes first, because
-# KXMLBHR must not match the KXMLB* game rule.
+# Series prefix -> vertical. The table is checked IN ORDER, first match
+# wins -- so a future entry whose prefix is itself a prefix of an EARLIER
+# entry's prefix (e.g. adding a bare "KXMLB" rule) would need to come AFTER
+# the more specific entries it must not shadow, such as KXMLBGAME. As it
+# stands today no entry's prefix is a prefix of another's, so order does
+# not currently affect any match -- this is a constraint on future entries,
+# not a description of the current table.
 _PREFIX_RULES: list[tuple[str, str]] = [
     ("KXMLBHR", "mlb_player_leg"),
     ("KXMLBRBI", "mlb_player_leg"),

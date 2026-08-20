@@ -7,9 +7,17 @@ These are different questions and conflating them is a common failure:
                         $1 of adverse excursion out of sample?
 
 The second needs no alpha at all: replay recorded books, take systematic
-entries, and compare realised adverse excursion against the RU prediction. If
-the void term is right, esports positions should breach their RU far more
-often than MLB games. That is directly falsifiable.
+entries, and compare realised adverse excursion against the RU prediction.
+
+MEASURED, and this is NOT what was originally hoped: as the RU formula
+currently stands, a breach is impossible across a wide band of mid prices
+for BOTH verticals, and that band is wider for esports (roughly 3c-77c)
+than for mlb_game (roughly 3c-63c). The larger void rate and spread in
+esports widen its own no-breach zone, so at mid prices esports breaches
+LESS often than MLB, not more. The vertical discrimination this harness was
+built to demonstrate does not yet work at mid prices. Whether and how to
+fix that is a decision for the operator, not something this module attempts
+on its own.
 
 A calibrated risk model is worth more than an uncalibrated alpha model,
 because it is what keeps the account solvent while the alpha search runs.
@@ -82,6 +90,29 @@ def breach_stats(observations: list[tuple[float, float]],
 NOMINAL_BREACH_RATE = 0.05
 
 
+@dataclass
+class SkipCounts:
+    """How many tickers calibrate() dropped, and why.
+
+    `main()` prints `len(by_ticker)` tickers loaded but `stats` only counts
+    the ones that made it all the way to a measurement -- a gap a reader can
+    easily mistake for the sample size. Pass an instance in via calibrate()'s
+    `skips` kwarg to have it populated in place; calibrate()'s return type
+    stays a plain dict[str, BreachStats] either way, so existing callers are
+    unaffected.
+    """
+    too_few_rows: int = 0
+    empty_path: int = 0
+    missing_quote: int = 0
+    unquoted_path: int = 0
+    sizing_error: int = 0
+
+    @property
+    def total(self) -> int:
+        return (self.too_few_rows + self.empty_path + self.missing_quote
+               + self.unquoted_path + self.sizing_error)
+
+
 def load_recording(path: Path) -> dict[str, list[dict]]:
     """Recorded JSONL grouped by ticker, each series sorted by timestamp."""
     by_ticker: dict[str, list[dict]] = defaultdict(list)
@@ -98,22 +129,31 @@ def load_recording(path: Path) -> dict[str, list[dict]]:
 
 
 def calibrate(by_ticker: dict[str, list[dict]],
-              horizon: int) -> dict[str, BreachStats]:
+              horizon: int,
+              skips: SkipCounts | None = None) -> dict[str, BreachStats]:
     """Systematic entry at each ticker's first quote, held `horizon` steps.
 
     NO ALPHA MODEL: every ticker is entered, so this measures the RISK model
     alone. Grouped by vertical because the void term is vertical-specific.
+
+    `skips`, if passed, is populated in place with a count of dropped
+    tickers by reason -- see SkipCounts.
     """
+    if skips is None:
+        skips = SkipCounts()
     obs_by_vertical: dict[str, list[tuple[float, float]]] = defaultdict(list)
     for ticker, rows in by_ticker.items():
         if len(rows) < 2:
+            skips.too_few_rows += 1
             continue
         entry, path = rows[0], rows[1:1 + horizon]
         if not path:
+            skips.empty_path += 1
             continue
         ask = entry.get("yes_ask_c")
         spread = entry.get("spread_c")
         if ask is None or spread is None:
+            skips.missing_quote += 1
             continue
 
         series = entry.get("series") or ticker.split("-", 1)[0]
@@ -122,10 +162,26 @@ def calibrate(by_ticker: dict[str, list[dict]],
         if rate is None:
             vertical, rate = "unmeasured", DEFAULT_VOID_RATE
 
-        predicted = ru_per_contract(ask / 100.0, spread_cents=spread,
-                                    void_rate=rate)
-        mids = [r["yes_ask_c"] for r in path if r.get("yes_ask_c") is not None]
-        realised = adverse_excursion(ask, mids)
+        try:
+            predicted = ru_per_contract(ask / 100.0, spread_cents=spread,
+                                        void_rate=rate)
+        except ValueError as exc:
+            # A malformed row (e.g. a negative spread reaching this far)
+            # must not abort the whole replay -- announce and move on.
+            print(f"  skip {ticker}: {type(exc).__name__}: {exc}")
+            skips.sizing_error += 1
+            continue
+
+        path_asks = [r["yes_ask_c"] for r in path
+                    if r.get("yes_ask_c") is not None]
+        if not path_asks:
+            # Every row in the held path is unquoted: this is MISSING DATA,
+            # not a measured non-breach. Scoring it as 0.0 excursion would
+            # silently bias the breach rate downward, and books go unquoted
+            # precisely when risk is real.
+            skips.unquoted_path += 1
+            continue
+        realised = adverse_excursion(ask, path_asks)
         obs_by_vertical[vertical].append((realised, predicted))
 
     return {v: breach_stats(obs, NOMINAL_BREACH_RATE)
@@ -140,12 +196,15 @@ def main() -> int:
     args = ap.parse_args()
 
     by_ticker = load_recording(Path(args.recording))
-    stats = calibrate(by_ticker, args.horizon)
+    skips = SkipCounts()
+    stats = calibrate(by_ticker, args.horizon, skips=skips)
     if not stats:
         print("no ticker had enough snapshots to measure -- record longer")
         return 0
 
-    print(f"RU calibration over {len(by_ticker)} tickers, "
+    measured = sum(s.n for s in stats.values())
+    print(f"RU calibration: {measured} tickers measured, {skips.total} "
+          f"dropped, out of {len(by_ticker)} tickers loaded, "
           f"horizon {args.horizon} snapshots")
     print(f"{'vertical':22} {'n':>6} {'breaches':>9} {'rate':>8} {'nominal':>8}")
     for vertical, s in sorted(stats.items()):

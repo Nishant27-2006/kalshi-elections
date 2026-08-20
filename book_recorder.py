@@ -20,7 +20,6 @@ from pathlib import Path
 
 from find_momentum import _all_open_markets
 from kalshi_client import KalshiClient
-from momentum_filter import _ask_cents, _bid_cents
 
 SNAPSHOT_FIELDS: tuple[str, ...] = (
     "ts", "series", "ticker", "event_ticker",
@@ -36,15 +35,29 @@ def _fp(value) -> float:
         return 0.0
 
 
+def _dollars_to_cents(value) -> float | None:
+    """A `_dollars` string field as CENTS, or None if unquoted."""
+    if value is None:
+        return None
+    try:
+        return float(value) * 100.0
+    except (TypeError, ValueError):
+        return None
+
+
 def snapshot_from_market(market: dict, ts: int) -> dict | None:
     """One row of the recording, or None if the book carries no quote.
 
-    Reads ONLY the `_dollars` and `_fp` forms: the plain `yes_bid`,
-    `yes_ask`, `open_interest` and `volume_24h` keys DO NOT EXIST on this
-    payload and reading them returns None or 0 silently.
+    Reads ONLY the `yes_bid_dollars` / `yes_ask_dollars` and `_fp` forms
+    DIRECTLY -- not through momentum_filter's `_ask_cents` / `_bid_cents`,
+    which check the plain `yes_bid` / `yes_ask` keys FIRST. Those plain keys
+    do not exist on this payload today, but if they ever did and disagreed
+    with the `_dollars` forms, going through the dual-shape helpers would let
+    the plain keys win and could produce a negative spread that later raises
+    an uncaught ValueError deep in ru_per_contract, aborting a whole replay.
     """
-    bid = _bid_cents(market)
-    ask = _ask_cents(market)
+    bid = _dollars_to_cents(market.get("yes_bid_dollars"))
+    ask = _dollars_to_cents(market.get("yes_ask_dollars"))
     if bid is None and ask is None:
         return None
     ticker = market.get("ticker") or ""

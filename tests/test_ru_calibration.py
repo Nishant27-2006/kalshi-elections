@@ -88,8 +88,14 @@ def test_a_mid_priced_book_cannot_breach_its_own_RU(tmp_path):
 def test_a_collapsing_favourite_breaches_its_RU(tmp_path):
     """Breaches live at the EXTREMES. A 91c favourite that goes to 2c realises
     0.89 of adverse excursion against a predicted RU of 0.5238, so it breaches
-    -- and this is the only test that proves calibrate() compares realised
-    against predicted in that order rather than the reverse."""
+    alongside a flat 50c ticker that does not. This fixture is symmetric
+    under a realised/predicted comparison reversal (n=2, breaches=1 either
+    way), so it does NOT catch that bug on its own --
+    test_a_mid_priced_book_cannot_breach_its_own_RU and
+    test_an_unmeasured_series_falls_back_to_the_worst_known_void_rate do.
+    What this test actually proves is that a genuine collapse from a strong
+    favourite realises more adverse excursion than its RU predicts, while a
+    flat book in the same batch does not."""
     p = tmp_path / "rec.jsonl"
     rows = []
     for ts, price in enumerate([91, 60, 20, 2], start=1):
@@ -112,6 +118,22 @@ def test_a_ticker_with_too_short_a_path_is_skipped(tmp_path):
                                  series="KXMLBGAME")), encoding="utf-8")
     stats = calibrate(load_recording(p), horizon=3)
     assert stats == {}, "a ticker with no path must not appear in the output at all"
+
+
+def test_a_path_that_loses_all_its_quotes_is_skipped_not_scored_as_zero(tmp_path):
+    """An unquoted path is MISSING DATA, not a measured non-breach. Scoring it
+    as 0.0 excursion would silently bias the breach rate downward -- and books
+    go unquoted precisely when risk is real."""
+    p = tmp_path / "rec.jsonl"
+    rows = [_row("KXMLBGAME-Q", 1, 49, 51, series="KXMLBGAME")]
+    for ts in (2, 3, 4):
+        r = _row("KXMLBGAME-Q", ts, 49, 51, series="KXMLBGAME")
+        r["yes_ask_c"] = None
+        rows.append(r)
+    p.write_text("\n".join(json.dumps(x) for x in rows), encoding="utf-8")
+
+    stats = calibrate(load_recording(p), horizon=3)
+    assert stats == {}, "an unquoted path must not be scored as a non-breach"
 
 
 def test_an_unmeasured_series_falls_back_to_the_worst_known_void_rate(tmp_path):
@@ -138,6 +160,59 @@ def test_an_unmeasured_series_falls_back_to_the_worst_known_void_rate(tmp_path):
     assert stats["unmeasured"].breaches == 0, (
         "a breach here means the fallback void rate was lowered below "
         "DEFAULT_VOID_RATE")
+
+
+def test_a_malformed_row_is_skipped_not_allowed_to_abort_the_replay(capsys, tmp_path):
+    """A negative spread reaching ru_per_contract raises ValueError there.
+    One bad ticker must not abort the whole replay: it is announced and
+    skipped, and other tickers are still measured."""
+    from ru_calibration import SkipCounts
+
+    p = tmp_path / "rec.jsonl"
+    rows = [
+        _row("KXMLBGAME-BAD", 1, 51, 49, series="KXMLBGAME"),  # bid>ask: spread -2
+        _row("KXMLBGAME-BAD", 2, 51, 49, series="KXMLBGAME"),
+    ]
+    for ts, price in enumerate([50, 50, 50, 50], start=1):
+        rows.append(_row("KXMLBGAME-Y", ts, price - 1, price + 1,
+                         series="KXMLBGAME"))
+    p.write_text("\n".join(json.dumps(x) for x in rows), encoding="utf-8")
+
+    skips = SkipCounts()
+    stats = calibrate(load_recording(p), horizon=3, skips=skips)
+    assert stats["mlb_game"].n == 1, "the good ticker must still be measured"
+    assert skips.sizing_error == 1
+    printed = capsys.readouterr().out
+    assert "KXMLBGAME-BAD" in printed, "the skipped ticker must be named"
+    assert "ValueError" in printed, "the failure type must be announced"
+
+
+def test_skip_counts_add_up_to_the_gap_between_loaded_and_measured(tmp_path):
+    from ru_calibration import SkipCounts
+
+    p = tmp_path / "rec.jsonl"
+    rows = [
+        # too_few_rows: a single snapshot
+        _row("KXMLBGAME-ONE", 1, 49, 51, series="KXMLBGAME"),
+        # missing_quote: no ask on the entry row
+    ]
+    missing = _row("KXMLBGAME-NOQUOTE", 1, 49, 51, series="KXMLBGAME")
+    missing["yes_ask_c"] = None
+    rows.append(missing)
+    rows.append(_row("KXMLBGAME-NOQUOTE", 2, 49, 51, series="KXMLBGAME"))
+    # one healthy ticker so calibrate() returns something
+    for ts, price in enumerate([50, 50, 50, 50], start=1):
+        rows.append(_row("KXMLBGAME-Y", ts, price - 1, price + 1,
+                         series="KXMLBGAME"))
+    p.write_text("\n".join(json.dumps(x) for x in rows), encoding="utf-8")
+
+    by_ticker = load_recording(p)
+    skips = SkipCounts()
+    stats = calibrate(by_ticker, horizon=3, skips=skips)
+    measured = sum(s.n for s in stats.values())
+    assert measured + skips.total == len(by_ticker)
+    assert skips.too_few_rows == 1
+    assert skips.missing_quote == 1
 
 
 def test_execution_stays_disabled_throughout_this_plan():
