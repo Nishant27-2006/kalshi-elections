@@ -10,14 +10,36 @@ The second needs no alpha at all: replay recorded books, take systematic
 entries, and compare realised adverse excursion against the RU prediction.
 
 MEASURED, and this is NOT what was originally hoped: as the RU formula
-currently stands, a breach is impossible across a wide band of mid prices
-for BOTH verticals, and that band is wider for esports (roughly 3c-77c)
-than for mlb_game (roughly 3c-63c). The larger void rate and spread in
-esports widen its own no-breach zone, so at mid prices esports breaches
-LESS often than MLB, not more. The vertical discrimination this harness was
-built to demonstrate does not yet work at mid prices. Whether and how to
-fix that is a decision for the operator, not something this module attempts
-on its own.
+currently stands, predicted RU can EXCEED the maximum loss a YES contract
+can take (the price cannot fall below zero), which makes a breach
+arithmetically impossible rather than merely unlikely. The region is NOT a
+single band and NOT simply 'cheap contracts are safe' -- it depends on the
+spread. Breach-impossible price runs, computed from the shipped formula:
+
+    vertical          2c spread            6c spread        8c spread
+    mlb_game          3.0c, 32.0-63.3c     3.0-10.4c,       3.0-69.2c
+                                           19.0-67.6c
+    atp_match         3.0-3.3c,            3.0-71.0c        3.0-72.4c
+                      27.2-67.9c
+    esports_series    3.0-3.8c,            3.0-76.4c        3.0-77.4c
+                      20.2-74.2c
+
+So on a TIGHT book a cheap longshot CAN breach -- mlb_game at a 2c spread
+is breachable from about 3.1c to 32c -- while the same contract on a wide
+book cannot. The mid-price zone is impossible everywhere.
+
+The direction that matters: esports has the WIDER no-breach zone at every
+spread. Its larger void rate and wider quotes RAISE predicted RU, so at mid
+prices esports breaches LESS often than MLB, the opposite of the
+discrimination this harness was built to demonstrate. Treat a clean
+calibration run as uninformative there, not as evidence the RU is sound.
+
+Cause: for a BOUNDED binary, a two-sigma move is definitionally the whole
+distance to settlement -- at 50c the volatility term alone equals the entire
+capital -- so no ceiling on RU repairs this. Only a smaller SIGMA_MULTIPLE
+does, and that halves RU and therefore DOUBLES position size. Spec 7.4
+assigns parameter revision to the monthly human-approved re-fit, so this
+module does not attempt it.
 
 A calibrated risk model is worth more than an uncalibrated alpha model,
 because it is what keeps the account solvent while the alpha search runs.
