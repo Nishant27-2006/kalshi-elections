@@ -16,17 +16,15 @@ arithmetically impossible rather than merely unlikely. The region is NOT a
 single band and NOT simply 'cheap contracts are safe' -- it depends on the
 spread. Breach-impossible price runs, computed from the shipped formula:
 
-    vertical          2c spread            6c spread        8c spread
-    mlb_game          3.0c, 32.0-63.3c     3.0-10.4c,       3.0-69.2c
-                                           19.0-67.6c
-    atp_match         3.0-3.3c,            3.0-71.0c        3.0-72.4c
-                      27.2-67.9c
-    esports_series    3.0-3.8c,            3.0-76.4c        3.0-77.4c
-                      20.2-74.2c
+    vertical          2c spread      6c spread      8c spread
+    mlb_game          23.3-67.7c     3.0-70.5c      3.0-71.8c
+    atp_match         20.1-70.9c     3.0-73.3c      3.0-74.3c
+    esports_series    15.1-75.9c     3.0-77.7c      3.0-78.6c
 
 So on a TIGHT book a cheap longshot CAN breach -- mlb_game at a 2c spread
-is breachable from about 3.1c to 32c -- while the same contract on a wide
-book cannot. The mid-price zone is impossible everywhere.
+is breachable below about 23c -- while the same contract on a wide book
+cannot breach anywhere above 3c. The mid-price zone is impossible in every
+vertical at every spread measured.
 
 The direction that matters: esports has the WIDER no-breach zone at every
 spread. Its larger void rate and wider quotes RAISE predicted RU, so at mid

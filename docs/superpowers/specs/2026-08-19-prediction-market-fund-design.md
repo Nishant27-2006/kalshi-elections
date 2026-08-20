@@ -448,9 +448,11 @@ shipped formula:
 `SIGMA_MULTIPLE = 2.0` makes predicted RU EXCEED the maximum loss a YES
 contract can take, so across much of the price range a breach is
 arithmetically impossible rather than merely rare. The affected region
-depends on the spread and is not contiguous at tight ones — `mlb_game` at a
-2c spread is breachable from about 3.1c to 32c and impossible from 32c to
-63.3c, while the same series on an 8c book is impossible from 3c to 69.2c.
+depends on the spread — `mlb_game` at a 2c spread is breachable below about
+23c and impossible from 23.3c to 67.7c, while the same series on an 8c book
+is impossible from 3c to 71.8c. (Recomputed after the fee constant was
+corrected to Kalshi's real `0.07*P*(1-P)` schedule, which widened every
+band.)
 
 Worse, the effect is LARGEST where discrimination matters most. A higher
 void rate and wider quotes raise predicted RU, so `esports_series` has a

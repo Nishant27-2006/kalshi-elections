@@ -6,10 +6,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import pytest
 
-from agent.risk_unit import (FEE_PER_CONTRACT_USD, MIN_PRICE_DOLLARS,
+from agent.risk_unit import (FEE_LEGS, MIN_PRICE_DOLLARS,
                              SIGMA_MULTIPLE, Sizing, ru_per_contract,
                              size_position, UNSIZEABLE_STRUCTURES,
-                             portfolio_ru)
+                             portfolio_ru, fee_per_contract)
 
 
 def test_ru_is_the_sum_of_its_three_terms():
@@ -18,9 +18,44 @@ def test_ru_is_the_sum_of_its_three_terms():
     got = ru_per_contract(p, spread_cents=spread, void_rate=v)
     sigma = math.sqrt(p * (1 - p))
     expected = (p * SIGMA_MULTIPLE * sigma
-                + (0.5 * spread / 100.0 + FEE_PER_CONTRACT_USD)
+                + (0.5 * spread / 100.0 + FEE_LEGS * fee_per_contract(p))
                 + p * v)
     assert got == pytest.approx(expected)
+
+
+def test_the_fee_follows_kalshis_published_schedule():
+    """Kalshi charges 0.07 * C * P * (1 - P) -- recorded in AGENT.md:166 and
+    used there to show the one FL-23 book with bids over 100c was still -4.6c
+    after fees. It is a PARABOLA peaking at 50c, not a flat charge, so it is
+    largest exactly where liquid books trade.
+
+    The old flat 0.01 placeholder claimed in its own comment to be
+    conservative and was not: the real fee exceeds it across most of a liquid
+    book. These bounds pin the shape, not just one point.
+    """
+    assert fee_per_contract(0.50) == pytest.approx(0.0175)
+    assert fee_per_contract(0.90) == pytest.approx(0.0063)
+    assert fee_per_contract(0.10) == pytest.approx(0.0063)
+    # symmetric about 50c
+    assert fee_per_contract(0.30) == pytest.approx(fee_per_contract(0.70))
+    # and it is a real parabola, not a constant
+    assert fee_per_contract(0.50) > fee_per_contract(0.20) > fee_per_contract(0.02)
+    # the old placeholder understated it across the liquid middle
+    assert fee_per_contract(0.50) > 0.01
+    assert fee_per_contract(0.20) > 0.01
+    # ...and overstated it at the extremes, which is why a flat charge is wrong
+    assert fee_per_contract(0.95) < 0.01
+
+
+def test_the_round_trip_charges_the_fee_on_both_legs():
+    """A position that moves against you is exited by trading, so it pays
+    twice. If FEE_LEGS were dropped to 1 the RU would understate the cost of
+    every position that has to be closed rather than held to settlement."""
+    p, spread, v = 0.50, 0.0, 0.0
+    got = ru_per_contract(p, spread_cents=spread, void_rate=v)
+    vol = p * SIGMA_MULTIPLE * math.sqrt(p * (1 - p))
+    assert got - vol == pytest.approx(FEE_LEGS * fee_per_contract(p))
+    assert FEE_LEGS == 2
 
 
 def test_a_mid_priced_contract_carries_more_risk_than_a_cheap_one():
@@ -43,15 +78,20 @@ def test_the_no_side_capital_at_risk_is_pinned_to_10c_not_90c():
     magnitude -- it would pass just as well if capital were mistakenly halved
     or otherwise scaled down. By hand, at price=0.90 side='no':
 
-        capital   = 1 - 0.90                        = 0.10
-        sigma     = sqrt(0.90 * 0.10)                = 0.3
-        vol_term  = capital * SIGMA_MULTIPLE * sigma = 0.10 * 2.0 * 0.3  = 0.06
-        cost_term = 0.5 * 2 / 100 + FEE_PER_CONTRACT_USD (0.01)         = 0.02
-        void_term = capital * void_rate (0.005)                        = 0.0005
-        RU        = 0.06 + 0.02 + 0.0005                                = 0.0805
+        capital   = 1 - 0.90                         = 0.10
+        sigma     = sqrt(0.90 * 0.10)                 = 0.3
+        vol_term  = capital * SIGMA_MULTIPLE * sigma  = 0.10 * 2.0 * 0.3 = 0.06
+        fee/leg   = 0.07 * 0.90 * 0.10                = 0.0063
+        cost_term = 0.5 * 2 / 100 + 2 * 0.0063        = 0.01 + 0.0126   = 0.0226
+        void_term = capital * void_rate (0.005)                         = 0.0005
+        RU        = 0.06 + 0.0226 + 0.0005                              = 0.0831
+
+    NOTE the fee is charged at the PRICE (0.90), not at the capital at risk
+    (0.10): Kalshi's schedule is 0.07*P*(1-P) on the contract, and that is
+    symmetric, so the NO side pays exactly what the YES side pays.
     """
     no_at_90 = ru_per_contract(0.90, spread_cents=2.0, void_rate=0.005, side="no")
-    assert no_at_90 == pytest.approx(0.0805)
+    assert no_at_90 == pytest.approx(0.0831)
 
 
 def test_on_a_cheap_contract_a_wide_book_costs_more_than_the_position_moves():
@@ -63,7 +103,7 @@ def test_on_a_cheap_contract_a_wide_book_costs_more_than_the_position_moves():
     """
     p, spread = 0.10, 60.0
     vol_term = p * SIGMA_MULTIPLE * math.sqrt(p * (1 - p))
-    cost_term = 0.5 * spread / 100.0 + FEE_PER_CONTRACT_USD
+    cost_term = 0.5 * spread / 100.0 + FEE_LEGS * fee_per_contract(p)
     assert cost_term > vol_term
 
     # and the wide book is materially more expensive than a tight one

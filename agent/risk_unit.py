@@ -25,10 +25,30 @@ from dataclasses import dataclass
 # monthly offline re-fit (spec section 7.4), never by the online learner.
 SIGMA_MULTIPLE: float = 2.0
 
-# Placeholder until the real Kalshi schedule is read and encoded -- spec
-# section 12, open question 2. Deliberately non-zero so sizing is never
-# optimistic about costs.
-FEE_PER_CONTRACT_USD: float = 0.01
+# Kalshi's published trading fee: 0.07 * C * P * (1 - P), where C is the
+# contract count and P the price in dollars. Recorded in AGENT.md:166 and
+# used there to show that the one FL-23 book whose bids summed over 100c was
+# still -4.6c AFTER fees. This replaces a flat 0.01 placeholder whose comment
+# claimed to be conservative and was not: 0.07*P*(1-P) peaks at 0.0175 at 50c
+# and exceeds 0.01 for every price between roughly 19.6c and 80.5c, which is
+# most of a liquid book.
+FEE_RATE: float = 0.07
+
+# A position that moves against you is exited by TRADING, so it pays the fee
+# twice -- once in, once out. The exit leg is charged at the entry price
+# rather than at the (unknown) exit price; this understates the exit fee when
+# the price moves toward 50c and overstates it when the price moves away.
+FEE_LEGS: int = 2
+
+
+def fee_per_contract(price: float) -> float:
+    """Kalshi's fee for ONE contract at `price` dollars, ONE leg.
+
+    Kalshi rounds the fee up to the next cent per ORDER, not per contract, so
+    a single-contract order pays more than this. Modelling the unrounded rate
+    is the right choice for sizing, which is about the marginal contract.
+    """
+    return FEE_RATE * price * (1.0 - price)
 
 
 def ru_per_contract(price: float, spread_cents: float, void_rate: float,
@@ -52,7 +72,8 @@ def ru_per_contract(price: float, spread_cents: float, void_rate: float,
     sigma = math.sqrt(price * (1.0 - price))
 
     vol_term = capital * SIGMA_MULTIPLE * sigma
-    cost_term = 0.5 * spread_cents / 100.0 + FEE_PER_CONTRACT_USD
+    cost_term = (0.5 * spread_cents / 100.0
+                 + FEE_LEGS * fee_per_contract(price))
     void_term = capital * void_rate
     return vol_term + cost_term + void_term
 

@@ -48,3 +48,6 @@ state/_*
 state/scan_*.json
 state/seen.json
 state/book_recording*.jsonl
+
+state/*.jsonl
+state/_liquid.json
