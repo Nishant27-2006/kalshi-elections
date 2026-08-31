@@ -1610,7 +1610,7 @@ def test_quantile_spread_returns_none_when_too_few_names():
 
 def test_ic_t_stat_delivered_matches_hand_computation():
     ics = [0.02, 0.04, 0.00, 0.06]
-    assert evaluate.ic_t_stat(ics) == pytest.approx(1.8973666, abs=1e-6)
+    assert evaluate.ic_t_stat(ics) == pytest.approx(2.3237900, abs=1e-6)
 
 
 def test_deflated_sharpe_penalises_many_trials():
@@ -1826,12 +1826,15 @@ def test_a_two_point_edge_does_not_survive_a_coinflip_round_trip():
 
 
 def test_capacity_curve_turns_negative_at_high_turnover():
+    # cost at 50c over a 2c spread = 0.02 + 2*0.07*0.25 = 0.055, so a
+    # 0.03 gross edge is NET NEGATIVE and more turnover only loses faster.
     curve = costs.capacity_curve(gross_edge=0.03, price=0.5, spread_c=2.0,
                                  turnovers=[1.0, 10.0, 100.0, 1000.0])
     assert len(curve) == 4
     annuals = [a for _, a in curve]
-    assert annuals[0] < annuals[-1] or annuals[-1] < 0
-    assert annuals == sorted(annuals) or annuals == sorted(annuals, reverse=True)
+    assert all(a < 0 for a in annuals)
+    assert annuals == sorted(annuals, reverse=True)
+    assert annuals[0] == pytest.approx(-0.025, abs=1e-12)
 
 
 def test_capacity_curve_is_positive_when_edge_beats_cost():

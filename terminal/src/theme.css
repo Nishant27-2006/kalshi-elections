@@ -1,0 +1,385 @@
+/* Kalshi EQR terminal.
+ *
+ * Palette is DIVERGING because every number here is signed: IC is +/-,
+ * a digital's vega flips sign at the strike, density mass can go negative.
+ * Amber reads positive, violet reads negative, and the ground is slate
+ * rather than black so the hatch of an unwritten module stays legible.
+ */
+
+:root {
+  --ink:        #0e1219;
+  --ink-panel:  #141a24;
+  --ink-raised: #1b2330;
+  --rule:       #263041;
+  --rule-soft:  #1d2531;
+
+  --text:       #ccd6e4;
+  --text-dim:   #6c7c93;
+  --text-faint: #48566a;
+
+  /* diverging signed accent */
+  --pos:        #f0a63c;
+  --pos-soft:   #6b4a17;
+  --neg:        #8b86f0;
+  --neg-soft:   #35336b;
+
+  /* the unwritten module */
+  --blueprint:  #4e93b0;
+  --blueprint-soft: #1d3a47;
+
+  --mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --cond: 'IBM Plex Sans Condensed', 'Roboto Condensed', system-ui, sans-serif;
+
+  --rail: 172px;
+  --head: 34px;
+  --foot: 26px;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root { height: 100%; margin: 0; }
+
+body {
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- chrome */
+
+.shell {
+  display: grid;
+  grid-template-rows: var(--head) 1fr var(--foot);
+  grid-template-columns: var(--rail) 1fr;
+  grid-template-areas: "head head" "rail main" "foot foot";
+  height: 100%;
+}
+
+.head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--rule);
+  background: var(--ink-panel);
+}
+
+.wordmark {
+  font-family: var(--cond);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--pos);
+}
+
+.head-stat {
+  font-family: var(--cond);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.head-stat b {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0;
+  margin-left: 5px;
+}
+
+.head-spacer { flex: 1; }
+
+.foot {
+  grid-area: foot;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 12px;
+  border-top: 1px solid var(--rule);
+  background: var(--ink-panel);
+  font-family: var(--cond);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+}
+
+.pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--pos);
+  box-shadow: 0 0 0 0 var(--pos-soft);
+  animation: pulse 2.4s ease-out infinite;
+}
+.pulse.dead { background: var(--neg); animation: none; }
+
+@keyframes pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(240,166,60,0.5); }
+  70%  { box-shadow: 0 0 0 7px rgba(240,166,60,0); }
+  100% { box-shadow: 0 0 0 0 rgba(240,166,60,0); }
+}
+
+/* ------------------------------------------------- the drill rail (signature) */
+
+.rail {
+  grid-area: rail;
+  border-right: 1px solid var(--rule);
+  background: var(--ink-panel);
+  overflow-y: auto;
+  padding: 10px 0 14px;
+}
+
+.rail-title {
+  font-family: var(--cond);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 0 12px 8px;
+}
+
+/* Each day is a rung. Unwritten rungs are hatched blueprint; written ones
+ * fill solid. The rail is a strike ladder for your own progress. */
+.rung {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  align-items: stretch;
+  gap: 8px;
+  padding: 0 12px;
+  margin-bottom: 3px;
+  min-height: 30px;
+}
+
+.rung-mark {
+  border-left: 2px solid var(--rule);
+  position: relative;
+}
+.rung-mark::after {
+  content: '';
+  position: absolute;
+  inset: 3px 0 3px 4px;
+  border: 1px solid var(--blueprint-soft);
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0 3px,
+    var(--blueprint-soft) 3px 4px
+  );
+}
+.rung.done .rung-mark { border-left-color: var(--pos); }
+.rung.done .rung-mark::after {
+  background-image: none;
+  background: var(--pos-soft);
+  border-color: var(--pos);
+}
+
+.rung-body { padding: 4px 0; min-width: 0; }
+
+.rung-day {
+  font-family: var(--cond);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.rung.done .rung-day { color: var(--pos); }
+
+.rung-mod {
+  font-size: 11px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rung.done .rung-mod { color: var(--text); }
+
+/* ---------------------------------------------------------------- main */
+
+.main {
+  grid-area: main;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--rule);
+  background: var(--ink-panel);
+  flex: 0 0 auto;
+}
+
+.tab {
+  font-family: var(--cond);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.tab:hover { color: var(--text-dim); }
+.tab[aria-selected='true'] {
+  color: var(--pos);
+  border-bottom-color: var(--pos);
+  background: var(--ink);
+}
+.tab:focus-visible { outline: 1px solid var(--blueprint); outline-offset: -1px; }
+
+.tab-key {
+  color: var(--text-faint);
+  margin-right: 6px;
+  font-family: var(--mono);
+}
+.tab[aria-selected='true'] .tab-key { color: var(--pos-soft); }
+
+.pane { flex: 1 1 auto; overflow: auto; padding: 12px; }
+
+.pane-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.pane-title {
+  font-family: var(--cond);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.pane-sub { font-size: 11px; color: var(--text-faint); }
+
+/* ---------------------------------------------------------------- tables */
+
+/* Capped rather than fluid: a terminal is dense, and letting numeric
+ * columns drift to opposite edges of a wide monitor makes a row unreadable
+ * as a row. */
+table.grid {
+  width: 100%;
+  max-width: 1120px;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.two-col table.grid { max-width: none; }
+.grid th {
+  font-family: var(--cond);
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: right;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--rule);
+  position: sticky;
+  top: 0;
+  background: var(--ink);
+}
+.grid th.l, .grid td.l { text-align: left; }
+.grid td {
+  padding: 3px 8px;
+  text-align: right;
+  border-bottom: 1px solid var(--rule-soft);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.grid td.k { color: var(--text); }
+.grid tbody tr:hover { background: var(--ink-raised); }
+.grid tbody tr.sel { background: var(--ink-raised); }
+.grid tbody tr.sel td.k { color: var(--pos); }
+.grid tbody tr { cursor: pointer; }
+
+.pos { color: var(--pos); }
+.neg { color: var(--neg); }
+
+/* ---------------------------------------------------------------- pending */
+
+.pending {
+  border: 1px solid var(--blueprint-soft);
+  background-image: repeating-linear-gradient(
+    45deg, transparent 0 5px, rgba(78,147,176,0.07) 5px 7px
+  );
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pending-tag {
+  font-family: var(--cond);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--blueprint);
+}
+.pending-file { font-size: 14px; font-weight: 600; color: var(--text); }
+.pending-note { font-size: 11px; color: var(--text-dim); max-width: 62ch; }
+.pending-cmd {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--blueprint);
+  background: var(--blueprint-soft);
+  padding: 4px 8px;
+  align-self: flex-start;
+}
+
+/* ---------------------------------------------------------------- charts */
+
+.chart-wrap { border: 1px solid var(--rule); background: var(--ink-panel); }
+.chart-cap {
+  font-family: var(--cond);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--rule-soft);
+}
+svg.chart { display: block; width: 100%; height: auto; }
+.axis { stroke: var(--rule); stroke-width: 1; }
+.gridline { stroke: var(--rule-soft); stroke-width: 1; }
+.tick {
+  fill: var(--text-faint);
+  font-family: var(--mono);
+  font-size: 9px;
+}
+.series-cdf { fill: none; stroke: var(--text-dim); stroke-width: 1.25; }
+.series-pdf { fill: var(--pos-soft); stroke: var(--pos); stroke-width: 1; }
+.series-neg { fill: var(--neg-soft); stroke: var(--neg); stroke-width: 1; }
+
+.two-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.stat-row { display: flex; flex-wrap: wrap; gap: 20px; margin: 10px 0 14px; }
+.stat { display: flex; flex-direction: column; gap: 1px; }
+.stat-l {
+  font-family: var(--cond);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.stat-v { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+.empty { color: var(--text-faint); padding: 24px 0; }
+
+@media (max-width: 900px) {
+  .shell { grid-template-columns: 1fr; grid-template-areas: "head" "main" "foot"; }
+  .rail { display: none; }
+  .two-col { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; }
+}

@@ -51,3 +51,10 @@ state/book_recording*.jsonl
 
 state/*.jsonl
 state/_liquid.jsonstate/_entity_index.json
+
+# EQR terminal
+terminal/node_modules/
+terminal/dist/
+state/*.log
+state/*.err
+state/*.pid
