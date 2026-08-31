@@ -701,8 +701,8 @@ git commit -m "feat(eqr): implied-vol surface with explicit two-root handling"
 **Interfaces:**
 - Consumes: `eqr.gbm.mc_digital_call`, `agent.digital.delta/vega/gamma/peak_vol`
 - Produces:
-  - `fd_delta(forward, strike, sigma, t_years, h=1e-4, n_paths=400_000, seed=31) -> float`
-  - `fd_vega(forward, strike, sigma, t_years, h=1e-4, n_paths=400_000, seed=31) -> float`
+  - `fd_delta(forward, strike, sigma, t_years, h=0.5, n_paths=400_000, seed=31) -> float`
+  - `fd_vega(forward, strike, sigma, t_years, h=0.01, n_paths=400_000, seed=31) -> float`
   - `vega_sign(forward, strike, sigma, t_years) -> int` — `+1`, `-1`, or `0`
 
 - [ ] **Step 1: Deliver the drill**
@@ -802,21 +802,22 @@ must agree, which is what proves you understand both.
 
 CRITICAL: use COMMON RANDOM NUMBERS. Pass the same seed to both the base
 and the bumped simulation. Fresh randoms make the finite difference
-(signal + noise)/h, and with h = 1e-4 the noise wins by orders of
-magnitude. If a test is flaky, this is why.
+(signal + noise)/h, and with a discontinuous payoff the noise wins by orders of magnitude.
+Measured at h = 1e-4: delta was wrong by -18%, -21% and -100% at K = 90,
+100 and 115. Hence the larger, per-parameter default bumps.
 """
 from __future__ import annotations
 
 
 def fd_delta(forward: float, strike: float, sigma: float, t_years: float,
-             h: float = 1e-4, n_paths: int = 400_000,
+             h: float = 0.5, n_paths: int = 400_000,
              seed: int = 31) -> float:
     """Central difference dPrice/dForward with common random numbers."""
     raise NotImplementedError("Day 3: yours to write")
 
 
 def fd_vega(forward: float, strike: float, sigma: float, t_years: float,
-            h: float = 1e-4, n_paths: int = 400_000,
+            h: float = 0.01, n_paths: int = 400_000,
             seed: int = 31) -> float:
     """Central difference dPrice/dSigma with common random numbers."""
     raise NotImplementedError("Day 3: yours to write")
