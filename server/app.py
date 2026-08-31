@@ -24,6 +24,8 @@ from agent import ladder as ladder_mod
 from eqr import density as density_mod
 from eqr import evaluate, loader
 from eqr import panel as panel_mod
+from eqr import perps as perps_mod
+from eqr import puts as puts_mod
 from eqr import universe as universe_mod
 
 REPO = Path(__file__).resolve().parents[1]
@@ -38,13 +40,95 @@ app.add_middleware(
 
 _COMBO = "KXMVECROSSCATEGORY"
 
+# Perps and exchange status are live network reads, so they are cached with
+# a short TTL. The WebSocket pushes every few seconds and every connected
+# client would otherwise hit Kalshi independently.
+_CACHE: dict[str, tuple[float, object]] = {}
+
+
+def _cached(key: str, ttl: float, fn):
+    import time as _t
+    hit = _CACHE.get(key)
+    now = _t.monotonic()
+    if hit is not None and now - hit[0] < ttl:
+        return hit[1]
+    try:
+        val = fn()
+    except Exception:
+        # A failed refresh serves stale data rather than an empty panel.
+        # Staleness is visible in the header; a blank screen is not.
+        if hit is not None:
+            return hit[1]
+        raise
+    _CACHE[key] = (now, val)
+    return val
+
+
+def _perps() -> list[dict]:
+    return _cached("perps", 2.0, perps_mod.fetch_perps)
+
+
+def _status() -> dict:
+    return _cached("status", 15.0, perps_mod.exchange_status)
+
+
+# The panel file is APPEND-ONLY and grows without bound: the recorder writes
+# ~1,340 rows per sweep every 300s, so ten days is roughly 3.8 million rows.
+# Re-parsing it per request made five concurrent fetches queue behind each
+# other on a single uvicorn worker and the slow ones lost, which showed up
+# in the terminal as an empty header. So it is read INCREMENTALLY: keep a
+# byte offset, parse only what was appended, and maintain the
+# latest-per-ticker view as we go.
+NEWLINE = bytes([10])
+_TAIL: dict = {"offset": 0, "rows": [], "latest": {}}
+
+
+def _ingest(chunk: str) -> None:
+    for line in chunk.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            r = json.loads(line)
+        except json.JSONDecodeError:
+            continue                      # torn line; the recorder is writing
+        _TAIL["rows"].append(r)
+        t = r.get("ticker")
+        if t is not None:
+            prev = _TAIL["latest"].get(t)
+            if prev is None or r.get("ts", 0) >= prev.get("ts", 0):
+                _TAIL["latest"][t] = r
+
+
+def _sync() -> None:
+    """Pull in whatever the recorder appended since the last call."""
+    if not PANEL.exists():
+        return
+    size = PANEL.stat().st_size
+    if size < _TAIL["offset"]:            # truncated or rotated: start over
+        _TAIL.update(offset=0, rows=[], latest={})
+    if size <= _TAIL["offset"]:
+        return
+    # Binary mode so the offset is real bytes; text mode newline translation
+    # on Windows makes seek offsets lie.
+    with open(PANEL, "rb") as fh:
+        fh.seek(_TAIL["offset"])
+        raw = fh.read(size - _TAIL["offset"])
+    cut = raw.rfind(NEWLINE)
+    if cut < 0:
+        return                            # no complete line yet
+    _ingest(raw[:cut].decode("utf-8", errors="replace"))
+    _TAIL["offset"] += cut + 1
+
 
 def _rows() -> list[dict]:
-    return loader.load_snapshots(PANEL) if PANEL.exists() else []
+    _sync()
+    return _TAIL["rows"]
 
 
 def _live() -> list[dict]:
-    out = [r for r in loader.latest_by_ticker(_rows()).values()
+    _sync()
+    out = [r for r in _TAIL["latest"].values()
            if not str(r.get("ticker", "")).startswith(_COMBO)]
     out.sort(key=lambda r: -(r.get("v24") or 0))
     return out
@@ -52,8 +136,8 @@ def _live() -> list[dict]:
 
 @app.get("/api/health")
 def health() -> dict:
-    n = sum(1 for _ in open(PANEL, encoding="utf-8")) if PANEL.exists() else 0
     rows = _rows()
+    n = len(rows)
     stamps = sorted({r["ts"] for r in rows}) if rows else []
     return {"ok": True, "panel_rows": n, "sweeps": len(stamps),
             "first_ts": stamps[0] if stamps else None,
@@ -245,5 +329,136 @@ async def ws_quotes(ws: WebSocket) -> None:
         while True:
             await ws.send_text(json.dumps({"markets": _live()[:200]}))
             await asyncio.sleep(5)
+    except WebSocketDisconnect:
+        return
+
+
+@app.get("/api/exchange")
+def exchange() -> dict:
+    """Live exchange status. trading_active is false outside hours."""
+    try:
+        st = _status()
+    except Exception as exc:                                  # noqa: BLE001
+        return {"reachable": False, "error": f"{type(exc).__name__}"}
+    idx = st.get("exchange_index_statuses") or []
+    return {"reachable": True,
+            "exchange_active": st.get("exchange_active"),
+            "trading_active": st.get("trading_active"),
+            "transfers_active": st.get("intra_exchange_transfers_active"),
+            "estimated_resume": st.get("exchange_estimated_resume_time"),
+            "indices": [{"name": i.get("description"),
+                         "trading_active": i.get("trading_active")}
+                        for i in idx]}
+
+
+@app.get("/api/perps")
+def perps_endpoint() -> dict:
+    """Perpetual futures with the underlying spot derived.
+
+    spot = price / contract_size. This is the forward the threshold ladders
+    do not publish.
+    """
+    try:
+        ps = _perps()
+    except Exception as exc:                                  # noqa: BLE001
+        return {"reachable": False, "error": f"{type(exc).__name__}", "perps": []}
+    return {"reachable": True, "perps": ps,
+            "forwards": perps_mod.series_forward(ps)}
+
+
+@app.get("/api/puts/{event_ticker}")
+def puts_endpoint(event_ticker: str, max_spread_c: float = 10.0) -> dict:
+    """Synthetic puts across the ladder, priced against the PERP forward.
+
+    Every author-owned step is guarded: density first, then puts. The
+    response names the file it is waiting on rather than inventing a price.
+    """
+    pairs, diag = _ladder_pairs(event_ticker)
+    series = event_ticker.split("-")[0]
+    forward = None
+    try:
+        forward = perps_mod.series_forward(_perps()).get(series)
+    except Exception:                                         # noqa: BLE001
+        pass
+
+    base: dict = {"event_ticker": event_ticker, "series": series,
+                  "forward": forward, "diagnostics": diag, "strikes": [],
+                  "rows": [], "ladder_mean": None}
+    if len(pairs) < 3:
+        base["pending"] = "not enough rungs recorded yet"
+        return base
+
+    strikes = [k for k, _ in pairs]
+    p_ge = [p for _, p in pairs]
+    try:
+        pdf = density_mod.pdf_from_cdf(strikes, p_ge)
+        mom = density_mod.moments(pdf)
+    except NotImplementedError as exc:
+        base["pending"] = f"eqr/density.py -- {exc}"
+        return base
+    base["ladder_mean"] = mom.get("mean")
+    base["mass"] = mom.get("mass")
+
+    rows = []
+    try:
+        # Sample about 30 strikes so the panel stays readable on a
+        # 300-rung ladder.
+        step = max(1, len(strikes) // 30)
+        for i in range(0, len(strikes), step):
+            k = strikes[i]
+            row = {
+                "strike": k,
+                "p_ge": p_ge[i],
+                "digital_put": puts_mod.digital_put(p_ge[i]),
+                "vanilla_put": puts_mod.vanilla_put(pdf, k),
+                "vanilla_call": puts_mod.vanilla_call(pdf, k),
+                "put_strip": puts_mod.put_from_digitals(strikes, p_ge, k),
+                "parity_vs_perp": (puts_mod.parity_error(pdf, k, forward)
+                                   if forward is not None else None),
+            }
+            vp, ps_ = row["vanilla_put"], row["put_strip"]
+            row["construction_gap"] = (
+                None if vp is None or ps_ is None else ps_ - vp)
+            rows.append(row)
+    except NotImplementedError as exc:
+        base["pending"] = f"eqr/puts.py -- {exc}"
+        return base
+    except ValueError as exc:
+        base["pending"] = f"eqr/puts.py raised ValueError: {exc}"
+        return base
+
+    base["rows"] = rows
+    return base
+
+
+@app.websocket("/ws/live")
+async def ws_live(ws: WebSocket) -> None:
+    """Real-time push: perps every 2s, exchange status and panel alongside.
+
+    Kalshi's own WebSocket requires an authenticated key, which this repo
+    does not yet have. This polls the public REST endpoints and presents
+    the identical message shape, so installing a key later swaps the
+    source without touching the client.
+    """
+    await ws.accept()
+    try:
+        while True:
+            try:
+                ps = _perps()
+                fwd = perps_mod.series_forward(ps)
+                st = _status()
+                payload = {
+                    "perps": ps,
+                    "forwards": fwd,
+                    "trading_active": st.get("trading_active"),
+                    "exchange_active": st.get("exchange_active"),
+                    "markets": _live()[:200],
+                    "source": "rest-poll",
+                }
+            except Exception as exc:                          # noqa: BLE001
+                payload = {"error": f"{type(exc).__name__}", "perps": [],
+                           "markets": [], "source": "rest-poll"}
+            await ws.send_text(json.dumps(payload))
+            await asyncio.sleep(2)
     except WebSocketDisconnect:
         return

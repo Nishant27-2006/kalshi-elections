@@ -28,9 +28,42 @@ export interface EventRow {
   series: string | null
 }
 
+export interface Perp {
+  ticker: string
+  title: string | null
+  bid: number | null
+  ask: number | null
+  mid: number | null
+  contract_size: number
+  spot: number | null
+  spot_bid: number | null
+  spot_ask: number | null
+  open_interest: number | null
+  volume_24h: number | null
+  leverage_estimate: number | null
+  status: string | null
+}
+
+export interface ExchangeStatus {
+  reachable: boolean
+  exchange_active?: boolean
+  trading_active?: boolean
+  transfers_active?: boolean
+  estimated_resume?: string | null
+  indices?: { name: string; trading_active: boolean }[]
+  error?: string
+}
+
 export type Moments = Partial<
   Record<'mean' | 'var' | 'stdev' | 'skew' | 'kurtosis' | 'mass', number>
 >
+
+export interface LadderDiagnostics {
+  rungs: number
+  wide_books: number
+  upward_steps: number
+  upward_steps_tight: number
+}
 
 export interface DensityResponse {
   event_ticker: string
@@ -39,12 +72,29 @@ export interface DensityResponse {
   pdf: [number, number][]
   moments: Moments
   negative_buckets: [number, number][]
-  diagnostics?: {
-    rungs: number
-    wide_books: number
-    upward_steps: number
-    upward_steps_tight: number
-  }
+  diagnostics?: LadderDiagnostics
+  pending?: string
+}
+
+export interface PutRow {
+  strike: number
+  p_ge: number
+  digital_put: number | null
+  vanilla_put: number | null
+  vanilla_call: number | null
+  put_strip: number | null
+  parity_vs_perp: number | null
+  construction_gap: number | null
+}
+
+export interface PutsResponse {
+  event_ticker: string
+  series: string
+  forward: number | null
+  ladder_mean: number | null
+  mass?: number | null
+  diagnostics?: LadderDiagnostics
+  rows: PutRow[]
   pending?: string
 }
 
@@ -76,6 +126,16 @@ export interface Progress {
   total: number
 }
 
+export interface LiveFrame {
+  perps?: Perp[]
+  forwards?: Record<string, number>
+  trading_active?: boolean
+  exchange_active?: boolean
+  markets?: MarketRow[]
+  source?: string
+  error?: string
+}
+
 async function get<T>(path: string): Promise<T> {
   const r = await fetch(`${BASE}${path}`)
   if (!r.ok) throw new Error(`${path} -> ${r.status}`)
@@ -86,6 +146,12 @@ export const getHealth = () => get<Health>('/api/health')
 export const getProgress = () => get<Progress>('/api/progress')
 export const getEvents = () => get<{ count: number; events: EventRow[] }>('/api/events')
 export const getAlphas = () => get<{ alphas: AlphaRow[] }>('/api/alphas')
+export const getExchange = () => get<ExchangeStatus>('/api/exchange')
+
+export const getPerps = () =>
+  get<{ reachable: boolean; perps: Perp[]; forwards: Record<string, number> }>(
+    '/api/perps',
+  )
 
 export const getUniverse = (limit = 400) =>
   get<{ count: number; markets: MarketRow[] }>(`/api/universe?limit=${limit}`)
@@ -98,18 +164,38 @@ export const getLadder = (ev: string) =>
 export const getDensity = (ev: string) =>
   get<DensityResponse>(`/api/density/${encodeURIComponent(ev)}`)
 
+export const getPuts = (ev: string) =>
+  get<PutsResponse>(`/api/puts/${encodeURIComponent(ev)}`)
+
 export const getBacktest = (mod: string) =>
   get<BacktestResponse>(`/api/backtest/${encodeURIComponent(mod)}`)
 
-/** Live quotes. Returns a closer; a torn frame is skipped, not fatal. */
-export function openQuoteSocket(onRows: (rows: MarketRow[]) => void): () => void {
-  const ws = new WebSocket(`${BASE.replace('http', 'ws')}/ws/quotes`)
-  ws.onmessage = (e) => {
-    try {
-      onRows(JSON.parse(e.data as string).markets as MarketRow[])
-    } catch {
-      /* ignore */
+/** Real-time feed. Auto-reconnects; a torn frame is skipped, not fatal. */
+export function openLiveSocket(onFrame: (f: LiveFrame) => void): () => void {
+  let ws: WebSocket | null = null
+  let timer: number | undefined
+  let closed = false
+
+  const connect = () => {
+    if (closed) return
+    ws = new WebSocket(`${BASE.replace('http', 'ws')}/ws/live`)
+    ws.onmessage = (e) => {
+      try {
+        onFrame(JSON.parse(e.data as string) as LiveFrame)
+      } catch {
+        /* torn frame */
+      }
     }
+    ws.onclose = () => {
+      if (!closed) timer = window.setTimeout(connect, 3000)
+    }
+    ws.onerror = () => ws?.close()
   }
-  return () => ws.close()
+  connect()
+
+  return () => {
+    closed = true
+    if (timer) window.clearTimeout(timer)
+    ws?.close()
+  }
 }

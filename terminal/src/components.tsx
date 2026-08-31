@@ -24,7 +24,7 @@ export function Pending({
 
 export function Panel({ caption, children }: { caption: string; children: ReactNode }) {
   return (
-    <div className="chart-wrap">
+    <div className="chartbox">
       <div className="chart-cap">{caption}</div>
       {children}
     </div>
@@ -41,7 +41,7 @@ export function Stat({
   sign?: boolean
 }) {
   const has = value !== null && value !== undefined && Number.isFinite(value)
-  const cls = !has || !sign ? '' : value! >= 0 ? 'pos' : 'neg'
+  const cls = !has || !sign ? '' : value! >= 0 ? 'up' : 'down'
   return (
     <div className="stat">
       <span className="stat-l">{label}</span>
@@ -123,11 +123,11 @@ export function EmptyChart({ hint }: { hint: string }) {
         width={W - PAD.l - PAD.r}
         height={H - PAD.t - PAD.b}
         fill="none"
-        stroke="var(--blueprint-soft)"
+        stroke="#2a2a2a"
       />
       <line className="axis" x1={PAD.l} x2={W - PAD.r} y1={H - PAD.b} y2={H - PAD.b} />
       <line className="axis" x1={PAD.l} x2={PAD.l} y1={PAD.t} y2={H - PAD.b} />
-      <text className="tick" x={W / 2} y={H / 2} textAnchor="middle" fill="var(--blueprint)">
+      <text className="tick" x={W / 2} y={H / 2} textAnchor="middle" fill="var(--bb-amber-dim)">
         {hint}
       </text>
     </svg>
@@ -146,7 +146,7 @@ export function LineChart({ xs, ys, label }: { xs: number[]; ys: number[]; label
   )
 }
 
-/** Bars, signed. Negative bars take the violet series because a negative
+/** Bars, signed. Negative bars take the red series because a negative
  *  bucket mass is a monotonicity violation, not a small positive number. */
 export function BarChart({
   xs,
