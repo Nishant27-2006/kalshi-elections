@@ -147,3 +147,16 @@ Races where the lean-adjusted model and Kalshi differ by ≥10c: AK Senate (mode
 vs 0.565), MN Senate (0.68 vs 0.865), SC Senate (0.26 vs 0.145), WI governor (0.69 vs 0.805). In four of the five,
 the market is more confident than polls plus lean. A wider σ than the market's implied one is the likeliest single
 explanation, so read these as "the model is less sure", not as directional edges.
+
+## Update 2026-10-09: favorability filled for 25 more races
+
+- **What was added:** a subagent filled `d_net_fav`/`r_net_fav` for 16 of 20 in-scope 2022 Senate rows and 9 of 14
+  in-scope 2024 Senate rows (52 rows filled in total). Each value comes from one pollster's own release, with the poll
+  named in `notes`.
+- **Walk-forward re-run:** literal analogs MAE 3.055 vs 3.261 (gain CI [0.00, +0.41], now touching zero); mirrored
+  3.096 (CI [−0.02, +0.35]). Essentially unchanged.
+- **The PA-2022 hypothesis tested directly:** among races where the Democrat's net favorability beat the
+  Republican's by 10+ points (n = 14, incl. PA 2022: Fetterman +1 vs Oz −16), the lean-controlled residual is
+  **−0.8 toward D** (CI [−3.2, +1.4]). A more popular Democrat did *not* beat the polls more often. PA 2022 is not a
+  repeatable pattern on this data.
+- **2026 MI Senate** (Rogers −12 net fav vs El-Sayed +1) now predicts a race-specific adjustment of **+0.0**.
