@@ -74,7 +74,8 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
   actions/tenure/travel/personnel, McConnell/Walz, Nobel, Abraham Accords, Taiwan advisory, CA Prop 40, Citrini).
 - ~~Walk-forward re-test of leads~~ done: period-dependent (fold 1, 2025H1: all lose; 2026 folds: positive). docs/backtests.md.
 - ~~Multiple-comparisons correction~~ done: Brier gains survive (Holm 7/37, BH 30/37); 0/31 P&L tests survive. docs/multiple_testing.md.
-- Re-test V18 and the low-efficiency lead on new settlements — BLOCKED until post-2026-10-09 settlements accumulate (bulk after Nov 3).
+- ~~Forward ledger + first LLM-judgment run~~ done: 1,147 timestamped forecasts (B0 1,056; analog 27; LLM 64). docs/ledger.md.
+- Score the ledger (`python -m forecast.ledger score`) and re-test V18 / the low-efficiency lead on new settlements — BLOCKED until markets settle (bulk Nov 2026–Jan 2027). Take more `ledger snapshot`s before then. until post-2026-10-09 settlements accumulate (bulk after Nov 3).
 
 - Re-test V18 (tight books only) on data that did not exist when it was chosen (post-2026-10-09 settlements).
 - ~~Analog favorability fill-in~~ done: +25 races; no change to validation; PA-type 'popular D' pattern −0.8 (n.s.).
