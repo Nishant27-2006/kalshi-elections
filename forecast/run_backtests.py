@@ -70,14 +70,14 @@ CONFIGS = [
 ]
 
 
-def run(names: set | None = None):
+def run(names: set | None = None, force: bool = False):
     snap = load()
     done = set()
     if os.path.exists(RESULTS):
         with open(RESULTS, encoding="utf-8") as fh:
             done = {json.loads(l)["name"] for l in fh}
     for cfg in CONFIGS:
-        if cfg.name in done and not (names and cfg.name in names):
+        if cfg.name in done and not force and not (names and cfg.name in names):
             continue
         r = evaluate(cfg, snap)
         t = r["test"]
@@ -162,7 +162,8 @@ def report():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--report", action="store_true")
+    ap.add_argument("--force", action="store_true", help="re-score every config (e.g. after a data refresh); old rows stay in the log")
     a = ap.parse_args()
     if not a.report:
-        run()
+        run(force=a.force)
     report()

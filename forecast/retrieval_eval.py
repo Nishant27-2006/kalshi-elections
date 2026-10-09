@@ -52,12 +52,12 @@ def evaluate(opts: dict, gold: list[dict], chunks, k: int = 5) -> dict:
             "markets_without_gold_file": missing_gold, "misses": misses}
 
 
-def main():
-    gold = json.load(open(GOLD, encoding="utf-8"))
+def main(gold_path: str = GOLD, label: str = "v1"):
+    gold = json.load(open(gold_path, encoding="utf-8"))
     chunks = load_chunks(KNOWLEDGE)
     n_files = len({c.file for c in chunks})
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines = [f"\n## Eval run {stamp}", "",
+    lines = [f"\n## Eval run {stamp} — gold set {label}", "",
              f"Knowledge: {n_files} files, {len(chunks)} chunks. Eval set: {len(gold)} markets, "
              f"{sum(len(g['gold']) for g in gold)} market→file pairs.", "",
              "| stage | recall@5 | markets scored | pairs scored | markets whose gold file is missing |", "|---|---|---|---|---|"]
@@ -79,4 +79,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--gold", default="v1", choices=["v1", "v2"],
+                    help="v1 = original set (R5 was tuned on it); v2 = fresh set labelled before any run")
+    a = ap.parse_args()
+    main(GOLD if a.gold == "v1" else GOLD.replace("retrieval_gold.json", "retrieval_gold_v2.json"), a.gold)
