@@ -75,5 +75,5 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
 | 0 | Paper reviews (5 PDFs → `docs/papers/`) | done |
 | 1 | Knowledge files | done — 71 notes in `knowledge/politics/` (≈1,500 dated+sourced claims), `knowledge/markets/how-prediction-markets-work.md` |
 | 2 | Retrieval + eval | done — BM25 + as-of filter; 74 markets / 78 pairs; recall@5 0.953 (R0) → 0.993 (R5, eval-tuned). `docs/retrieval.md` |
-| 3 | Backtests | not started |
+| 3 | Backtests | done — 26 logged runs (B0 + 25 one-change variations) on a locked 30% test set; B0 beats market Brier (+1.0% skill, CI excludes 0); no P&L CI above 0. `docs/backtests.md` |
 | 4 | Market mechanics + participant models | not started |

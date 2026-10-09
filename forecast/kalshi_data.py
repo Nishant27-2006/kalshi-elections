@@ -37,7 +37,7 @@ MIN_LIFE_DAYS = 3.0
 
 _lock = threading.Lock()
 _last = [0.0]
-MIN_INTERVAL = 0.2  # ~5 req/s; the IP is shared with research agents hitting the same API
+MIN_INTERVAL = 0.45  # ~2 req/s: candlestick endpoints sustain ~1-2 req/s unauthenticated; bursts 429
 
 _session = requests.Session()
 _n429 = [0]
@@ -186,10 +186,34 @@ def _candles(m: dict) -> list[dict]:
     return out
 
 
-def fetch_candles(workers: int = 8) -> None:
+def fetch_candles(workers: int = 2) -> None:
     os.makedirs(CANDLE_DIR, exist_ok=True)
     uni = universe()
     todo = [m for m in uni if not os.path.exists(_candle_path(m["ticker"]))]
+    # Round-robin over series, one whole EVENT at a time (all its legs), random
+    # within a series. If the fetch is cut short, what exists spans every series
+    # instead of being dominated by the few series with thousands of markets,
+    # and every event present is complete.
+    import random
+    from collections import defaultdict, deque
+    rng = random.Random(7)
+    by_series = defaultdict(lambda: defaultdict(list))
+    for m in todo:
+        by_series[m["_series"]][m["event_ticker"]].append(m)
+    queues = []
+    for s in sorted(by_series):
+        evs = list(by_series[s].values())
+        rng.shuffle(evs)
+        queues.append(deque(evs))
+    rng.shuffle(queues)
+    todo = []
+    while queues:
+        nxt = []
+        for q in queues:
+            todo.extend(q.popleft())
+            if q:
+                nxt.append(q)
+        queues = nxt
     print(f"universe {len(uni)}, candles to fetch {len(todo)}", flush=True)
     n = 0
     with ThreadPoolExecutor(workers) as ex:
@@ -203,8 +227,8 @@ def fetch_candles(workers: int = 8) -> None:
                 continue
             _dump(_candle_path(m["ticker"]), cs)
             n += 1
-            if n % 500 == 0:
-                print(f"  {n}/{len(todo)}", flush=True)
+            if n % 250 == 0:
+                print(f"  {n}/{len(todo)}, 429s {_n429[0]}, {time.strftime('%H:%M:%S')}", flush=True)
 
 
 def _candle_path(ticker: str) -> str:
