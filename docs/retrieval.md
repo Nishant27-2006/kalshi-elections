@@ -59,8 +59,8 @@ Misses at the final stage:
 
 - **Recall@5 = 0.95 with plain BM25 says the eval is easy.** Most notes were written for exactly these
   markets, so a race note's title shares words with the market title. A market whose topic has no note
-  scores 0 and isn't in the set; coverage, not ranking, is the real limit. 1,700+ open political
-  events have no note at all.
+  scores 0 and isn't in the set; coverage, not ranking, is the real limit. Measured 2026-10-09: notes'
+  `markets:` tickers cover 510 of 4,169 open political events, but those 510 hold 93.1% of open interest.
 - **R2 (title folding) and R5 (concept expansion) are the only changes that moved recall.** R3 and R4 add
   nothing on this set because BM25 already finds the race note. They matter for tickers whose title doesn't
   name the state (e.g. `KXMIDTERMMOV-*`), and the set has few of those.
