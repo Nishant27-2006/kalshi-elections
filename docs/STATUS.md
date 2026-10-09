@@ -68,6 +68,14 @@ CI clears 0); the mirrored version does not. The dominant pattern is cycle-level
 Democrats in all three Trump-on-ballot years but not in the 2018/2022 midterms. The most robust race-level
 pattern, that polls understate a state's partisan lean, is already priced by Kalshi.
 
+## Next (not done)
+
+- Re-test V18 (tight books only) on data that did not exist when it was chosen (post-2026-10-09 settlements).
+- Fresh retrieval eval set (R5 was tuned on the current one).
+- Finish the remaining 1,198 candle fetches when memory allows (`python -m forecast.kalshi_data candles` resumes).
+- LLM judgment step over retrieved chunks: untested (no ANTHROPIC_API_KEY), and the only path by which the
+  knowledge layer could still beat plain recalibration.
+
 ## Workstream status
 
 | # | Workstream | Status |
@@ -76,4 +84,4 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
 | 1 | Knowledge files | done — 71 notes in `knowledge/politics/` (≈1,500 dated+sourced claims), `knowledge/markets/how-prediction-markets-work.md` |
 | 2 | Retrieval + eval | done — BM25 + as-of filter; 74 markets / 78 pairs; recall@5 0.953 (R0) → 0.993 (R5, eval-tuned). `docs/retrieval.md` |
 | 3 | Backtests | done — 26 logged runs (B0 + 25 one-change variations) on a locked 30% test set; B0 beats market Brier (+1.0% skill, CI excludes 0); no P&L CI above 0. `docs/backtests.md` |
-| 4 | Market mechanics + participant models | not started |
+| 4 | Market mechanics + participant models | done — `knowledge/markets/how-prediction-markets-work.md`; liquidity/efficiency/activity submodels; edge does NOT concentrate in low-sophistication markets; trade size uncorrelated with sophistication. `docs/participants.md` |
