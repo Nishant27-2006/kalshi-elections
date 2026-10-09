@@ -6,8 +6,8 @@ Do not hand-edit numbers; rerun instead.
 ## Protocol
 
 - Universe: settled binary markets in Kalshi's Elections + Politics categories (live and /historical endpoints), daily candles, weekly decision snapshots (Monday 04:00 UTC).
-- Split: most recent 30% of events by close = TEST (never used for fitting or tuning). Split cutoff: **2026-06-24**; test snapshots all have T >= cutoff.
-- Train: 9991 markets / 2714 events / 84792 snapshots. Test: 3778 markets / 1024 events / 13748 snapshots.
+- Split: most recent 30% of events by close = TEST (never used for fitting or tuning). Split cutoff: **2026-06-19**; test snapshots all have T >= cutoff.
+- Train: 10754 markets / 2828 events / 83734 snapshots. Test: 4231 markets / 1132 events / 15598 snapshots.
 - Brier is market-weighted (each market counts once). Baseline = the market mid at the same snapshot.
 - P&L: 1 contract, first triggering snapshot per market, held to settlement; taker pays ask (or 1-bid) + 0.07·P·(1−P). The money baseline is 0 (do nothing).
 - CIs: 95%, bootstrapped by event.
@@ -17,34 +17,47 @@ Do not hand-edit numbers; rerun instead.
 
 | run | Brier model | Brier market | skill | Δ CI95 | trades | P&L $ | P&L/trade | P&L/trade CI95 | beat market Brier? | beat $0? |
 |---|---|---|---|---|---|---|---|---|---|---|
-| B0 old plan Stage A | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 88 | 3.156 | +0.0359 | [-0.0852, 0.1463] | **yes (CI<0)** | point only |
-| V01 market price only | 0.09047 | 0.09047 | +0.0000 | [0.0, 0.0] | 0 | 0.0 | – | – | no | no trades |
-| V02 global Platt (no archetype) | 0.09005 | 0.09047 | +0.0047 | [-0.00064, -0.0002] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
-| V03 archetype slope too | 0.0901 | 0.09047 | +0.0041 | [-0.0012, 0.00043] | 169 | 0.987 | +0.0058 | [-0.0732, 0.0799] | point only | point only |
-| V04 isotonic recalibration | 0.09058 | 0.09047 | -0.0011 | [-0.00024, 0.00043] | 0 | 0.0 | – | – | no | no trades |
-| V05 paper FLB prior (no fit) | 0.09018 | 0.09047 | +0.0033 | [-0.00047, -0.00012] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
-| V06 microstructure logistic | 0.0899 | 0.09047 | +0.0064 | [-0.001, -0.00011] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
-| V07 reversion term | 0.08988 | 0.09047 | +0.0066 | [-0.00087, -0.00035] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
-| V08 blend with market | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 88 | 3.156 | +0.0359 | [-0.0852, 0.1463] | **yes (CI<0)** | point only |
-| V09 sum-to-one normalisation | 0.09006 | 0.09047 | +0.0045 | [-0.00063, -0.00019] | 4 | -0.071 | -0.0177 | – | **yes (CI<0)** | no |
-| V10 recency: last 365d of train | 0.08951 | 0.09047 | +0.0107 | [-0.00153, -0.0004] | 95 | 2.344 | +0.0247 | [-0.0756, 0.1411] | **yes (CI<0)** | point only |
-| V11 min_edge 2c | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 281 | 1.605 | +0.0057 | [-0.0441, 0.0583] | **yes (CI<0)** | point only |
-| V12 min_edge 10c | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 8 | 0.642 | +0.0802 | [-0.2886, 0.355] | **yes (CI<0)** | point only |
-| V13 edge in logit space | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 166 | -1.729 | -0.0104 | [-0.0788, 0.0565] | **yes (CI<0)** | no |
-| V14 YES side only | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 80 | 2.685 | +0.0336 | [-0.091, 0.1476] | **yes (CI<0)** | point only |
-| V15 NO side only | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 8 | 0.471 | +0.0589 | [-0.2631, 0.3785] | **yes (CI<0)** | point only |
-| V16 favourites only (>=50c) | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 57 | 3.572 | +0.0627 | [-0.0555, 0.1811] | **yes (CI<0)** | point only |
-| V17 tails excluded (15-85c) | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 88 | 3.156 | +0.0359 | [-0.0852, 0.1463] | **yes (CI<0)** | point only |
-| V18 tight books only (spread<=4c) | 0.07061 | 0.07123 | +0.0086 | [-0.00111, -9e-05] | 57 | 6.856 | +0.1203 | [-0.0067, 0.2626] | **yes (CI<0)** | point only |
-| V19 mature markets (age>=30d) | 0.06035 | 0.06134 | +0.0161 | [-0.00158, -0.00048] | 34 | 3.321 | +0.0977 | [-0.0762, 0.2481] | **yes (CI<0)** | point only |
-| V20 maker execution | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 824 | -22.237 | -0.0270 | [-0.0543, 0.0029] | **yes (CI<0)** | no |
-| V21 low-sophistication markets | 0.10001 | 0.10098 | +0.0096 | [-0.00194, 6e-05] | 18 | 1.625 | +0.0903 | [-0.2197, 0.288] | point only | point only |
-| V22 mid-sophistication markets | 0.09204 | 0.09313 | +0.0117 | [-0.00175, -0.00052] | 49 | 2.164 | +0.0442 | [-0.1086, 0.1849] | **yes (CI<0)** | point only |
-| V23 high-sophistication markets | 0.08598 | 0.08653 | +0.0063 | [-0.00133, 0.00023] | 57 | 1.717 | +0.0301 | [-0.0936, 0.1799] | point only | point only |
-| V24 zero-fee counterfactual | 0.08957 | 0.09047 | +0.0100 | [-0.00147, -0.00034] | 115 | 5.26 | +0.0457 | [-0.0481, 0.1411] | **yes (CI<0)** | point only |
-| V25 knowledge-file prior | 0.09011 | 0.09047 | +0.0040 | [-0.00064, -3e-05] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
+| B0 old plan Stage A | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 90 | 3.12 | +0.0347 | [-0.0806, 0.1527] | **yes (CI<0)** | point only |
+| V01 market price only | 0.08813 | 0.08813 | +0.0000 | [0.0, 0.0] | 0 | 0.0 | – | – | no | no trades |
+| V02 global Platt (no archetype) | 0.08777 | 0.08813 | +0.0041 | [-0.00055, -0.00018] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
+| V03 archetype slope too | 0.08773 | 0.08813 | +0.0045 | [-0.00105, 0.00034] | 194 | 0.301 | +0.0016 | [-0.072, 0.0698] | point only | point only |
+| V04 isotonic recalibration | 0.08817 | 0.08813 | -0.0004 | [-0.00038, 0.00035] | 49 | 0.223 | +0.0046 | [-0.1208, 0.1404] | no | point only |
+| V05 paper FLB prior (no fit) | 0.08783 | 0.08813 | +0.0034 | [-0.00046, -0.00016] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
+| V06 microstructure logistic | 0.08763 | 0.08813 | +0.0056 | [-0.00095, -7e-05] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
+| V07 reversion term | 0.08762 | 0.08813 | +0.0057 | [-0.0007, -0.0003] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
+| V08 blend with market | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 90 | 3.12 | +0.0347 | [-0.0806, 0.1527] | **yes (CI<0)** | point only |
+| V09 sum-to-one normalisation | 0.08779 | 0.08813 | +0.0039 | [-0.00052, -0.00016] | 7 | -0.891 | -0.1273 | [-0.2909, 0.1061] | **yes (CI<0)** | no |
+| V10 recency: last 365d of train | 0.08717 | 0.08813 | +0.0108 | [-0.00142, -0.0004] | 94 | 2.759 | +0.0294 | [-0.0747, 0.1347] | **yes (CI<0)** | point only |
+| V11 min_edge 2c | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 283 | -1.275 | -0.0045 | [-0.0564, 0.0548] | **yes (CI<0)** | no |
+| V12 min_edge 10c | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 0 | 0.0 | – | – | **yes (CI<0)** | no trades |
+| V13 edge in logit space | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 154 | 1.794 | +0.0117 | [-0.0595, 0.0889] | **yes (CI<0)** | point only |
+| V14 YES side only | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 80 | 1.969 | +0.0246 | [-0.1056, 0.152] | **yes (CI<0)** | point only |
+| V15 NO side only | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 10 | 1.152 | +0.1152 | [-0.1703, 0.3976] | **yes (CI<0)** | point only |
+| V16 favourites only (>=50c) | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 55 | 3.219 | +0.0585 | [-0.0725, 0.1843] | **yes (CI<0)** | point only |
+| V17 tails excluded (15-85c) | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 90 | 3.12 | +0.0347 | [-0.0806, 0.1527] | **yes (CI<0)** | point only |
+| V18 tight books only (spread<=4c) | 0.06863 | 0.06915 | +0.0075 | [-0.00098, -7e-05] | 60 | 6.247 | +0.1041 | [-0.0275, 0.238] | **yes (CI<0)** | point only |
+| V19 mature markets (age>=30d) | 0.0585 | 0.05931 | +0.0136 | [-0.00135, -0.00025] | 39 | 3.863 | +0.0990 | [-0.0567, 0.2678] | **yes (CI<0)** | point only |
+| V20 maker execution | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 930 | -15.038 | -0.0162 | [-0.0423, 0.0149] | **yes (CI<0)** | no |
+| V21 low-sophistication markets | 0.09724 | 0.09847 | +0.0125 | [-0.0021, -0.00031] | 18 | 2.805 | +0.1558 | [-0.1084, 0.3304] | **yes (CI<0)** | point only |
+| V22 mid-sophistication markets | 0.09063 | 0.09163 | +0.0110 | [-0.00158, -0.00041] | 50 | 2.36 | +0.0472 | [-0.0836, 0.1877] | **yes (CI<0)** | point only |
+| V23 high-sophistication markets | 0.08493 | 0.08526 | +0.0039 | [-0.00105, 0.00037] | 60 | 1.444 | +0.0241 | [-0.1137, 0.1581] | point only | point only |
+| V24 zero-fee counterfactual | 0.08733 | 0.08813 | +0.0091 | [-0.00128, -0.00025] | 122 | 4.4 | +0.0361 | [-0.0567, 0.1253] | **yes (CI<0)** | point only |
+| V25 knowledge-file prior | 0.08787 | 0.08813 | +0.0030 | [-0.00052, 2e-05] | 0 | 0.0 | – | – | point only | no trades |
 
-## Findings (written 2026-10-09 after the 26 runs; numbers are from the table above)
+## Findings (updated 2026-10-09 after the full-data rerun; the table above is the full-data run)
+
+**Full-data rerun.** The first pass used 18,290 of 19,488 markets, because the candle fetch was stopped for low
+memory. After the fetch completed, all 26 configs were re-scored on the full set (cutoff 2026-06-19, 10,754 train /
+4,231 test markets). Both passes are in `docs/backtest_runs.jsonl`. Changes from the first pass:
+- **B0:** skill +1.00% → **+0.91%**, CI still excludes zero. P&L +$3.16 → **+$3.12** (90 trades, CI [−8.1c, +15.3c]).
+- **V18 (tight books):** +$6.86 → **+$6.25** (60 trades, CI [−2.8c, +23.8c]). Still the best, still not significant.
+- **V11 (min_edge 2c):** turned negative (−$1.28 on 283 trades). **V12 (min_edge 10c)** now makes no trades.
+- **V20 (maker):** −$22.24 → **−$15.04** on 930 fills; still the worst.
+- **V25 (knowledge prior):** +0.30% skill, CI now touches zero.
+- **Sophistication:** the composite terciles now show a monotone skill gradient (low +1.25%, mid +1.10%, high
+  +0.39%). See docs/participants.md.
+
+Numbers in points 1–6 below are from the first pass; the direction of every finding is unchanged on full data.
 
 **Against the success criterion, "better calibrated than the market price, after fees":** calibration is better,
 by a small amount that clears the bootstrap. Profit after fees is **not** established; no configuration's P&L CI
@@ -102,573 +115,573 @@ is above zero.
 
 ### B0 old plan Stage A
 
-- Run at 2026-10-09 08:36 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:57 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Archetype base rate + market-price slope (fit on train); trade when edge > 5c net; spread <= 10c; refuse <3c.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 603 trades, P&L 19.352.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 88 trades on 59 events, P&L 3.156, per trade 0.0359 (CI [-0.0852, 0.1463]), hit rate 0.568, return on cost 0.0674, top-event share of P&L 0.625.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 570 trades, P&L 17.231.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 90 trades on 63 events, P&L 3.12, per trade 0.0347 (CI [-0.0806, 0.1527]), hit rate 0.533, return on cost 0.0695, top-event share of P&L 0.632.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V01 market price only
 
-- Run at 2026-10-09 08:37 UTC. Config: estimator `market` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:57 UTC. Config: estimator `market` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Sanity row: the market as its own forecast. Brier skill must be 0 and no trades.
-- Train (in-sample): Brier 0.10497 vs market 0.10497; 0 trades, P&L 0.0.
-- Test: Brier 0.09047 vs market 0.09047 (Δ CI [0.0, 0.0]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10761 vs market 0.10761; 0 trades, P&L 0.0.
+- Test: Brier 0.08813 vs market 0.08813 (Δ CI [0.0, 0.0]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4297 | 0.0228 | 0.0228 | 0.0084 | 0.0084 |
-| 0.05-0.10 | 1517 | 0.0694 | 0.0694 | 0.0547 | 0.0547 |
-| 0.10-0.20 | 1576 | 0.1435 | 0.1435 | 0.1078 | 0.1078 |
-| 0.20-0.30 | 836 | 0.2425 | 0.2425 | 0.1921 | 0.1921 |
-| 0.30-0.40 | 611 | 0.3443 | 0.3443 | 0.33 | 0.33 |
-| 0.40-0.50 | 559 | 0.4509 | 0.4509 | 0.3985 | 0.3985 |
-| 0.50-0.60 | 568 | 0.5443 | 0.5443 | 0.5513 | 0.5513 |
-| 0.60-0.70 | 598 | 0.6479 | 0.6479 | 0.6759 | 0.6759 |
-| 0.70-0.80 | 623 | 0.751 | 0.751 | 0.7784 | 0.7784 |
-| 0.80-0.90 | 830 | 0.8502 | 0.8502 | 0.8727 | 0.8727 |
-| 0.90-0.95 | 711 | 0.9258 | 0.9258 | 0.9263 | 0.9263 |
-| 0.95-1.00 | 1022 | 0.9707 | 0.9707 | 0.977 | 0.977 |
+| 0.00-0.05 | 4995 | 0.0229 | 0.0229 | 0.009 | 0.009 |
+| 0.05-0.10 | 1734 | 0.0691 | 0.0691 | 0.0489 | 0.0489 |
+| 0.10-0.20 | 1778 | 0.1433 | 0.1433 | 0.109 | 0.109 |
+| 0.20-0.30 | 955 | 0.2432 | 0.2432 | 0.2037 | 0.2037 |
+| 0.30-0.40 | 668 | 0.3445 | 0.3445 | 0.3227 | 0.3227 |
+| 0.40-0.50 | 614 | 0.4512 | 0.4512 | 0.3927 | 0.3927 |
+| 0.50-0.60 | 634 | 0.5436 | 0.5436 | 0.5506 | 0.5506 |
+| 0.60-0.70 | 655 | 0.6476 | 0.6476 | 0.6779 | 0.6779 |
+| 0.70-0.80 | 687 | 0.7513 | 0.7513 | 0.7904 | 0.7904 |
+| 0.80-0.90 | 906 | 0.8502 | 0.8502 | 0.8714 | 0.8714 |
+| 0.90-0.95 | 794 | 0.9255 | 0.9255 | 0.9241 | 0.9241 |
+| 0.95-1.00 | 1178 | 0.971 | 0.971 | 0.9805 | 0.9805 |
 
 ### V02 global Platt (no archetype)
 
-- Run at 2026-10-09 08:37 UTC. Config: estimator `platt` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:57 UTC. Config: estimator `platt` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Drop the archetype intercepts; one recalibration curve for all markets.
-- Train (in-sample): Brier 0.10487 vs market 0.10497; 0 trades, P&L 0.0.
-- Test: Brier 0.09005 vs market 0.09047 (Δ CI [-0.00064, -0.0002]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10749 vs market 0.10761; 0 trades, P&L 0.0.
+- Test: Brier 0.08777 vs market 0.08813 (Δ CI [-0.00055, -0.00018]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4893 | 0.0197 | 0.0228 | 0.0123 | 0.0084 |
-| 0.05-0.10 | 1295 | 0.0699 | 0.0694 | 0.0603 | 0.0547 |
-| 0.10-0.20 | 1451 | 0.1429 | 0.1435 | 0.126 | 0.1078 |
-| 0.20-0.30 | 736 | 0.2453 | 0.2425 | 0.2177 | 0.1921 |
-| 0.30-0.40 | 536 | 0.346 | 0.3443 | 0.357 | 0.33 |
-| 0.40-0.50 | 559 | 0.4542 | 0.4509 | 0.408 | 0.3985 |
-| 0.50-0.60 | 494 | 0.5495 | 0.5443 | 0.5792 | 0.5513 |
-| 0.60-0.70 | 574 | 0.6518 | 0.6479 | 0.6793 | 0.6759 |
-| 0.70-0.80 | 572 | 0.7555 | 0.751 | 0.7622 | 0.7784 |
-| 0.80-0.90 | 797 | 0.8528 | 0.8502 | 0.8659 | 0.8727 |
-| 0.90-0.95 | 619 | 0.9274 | 0.9258 | 0.9277 | 0.9263 |
-| 0.95-1.00 | 1222 | 0.9737 | 0.9707 | 0.9668 | 0.977 |
+| 0.00-0.05 | 5657 | 0.0211 | 0.0229 | 0.0118 | 0.009 |
+| 0.05-0.10 | 1498 | 0.0726 | 0.0691 | 0.0608 | 0.0489 |
+| 0.10-0.20 | 1584 | 0.1449 | 0.1433 | 0.1274 | 0.109 |
+| 0.20-0.30 | 885 | 0.2446 | 0.2432 | 0.2171 | 0.2037 |
+| 0.30-0.40 | 626 | 0.3494 | 0.3445 | 0.3538 | 0.3227 |
+| 0.40-0.50 | 578 | 0.4546 | 0.4512 | 0.4047 | 0.3927 |
+| 0.50-0.60 | 577 | 0.545 | 0.5436 | 0.5846 | 0.5506 |
+| 0.60-0.70 | 628 | 0.6478 | 0.6476 | 0.6761 | 0.6779 |
+| 0.70-0.80 | 641 | 0.7521 | 0.7513 | 0.7856 | 0.7904 |
+| 0.80-0.90 | 877 | 0.8504 | 0.8502 | 0.8618 | 0.8714 |
+| 0.90-0.95 | 736 | 0.9265 | 0.9255 | 0.9315 | 0.9241 |
+| 0.95-1.00 | 1311 | 0.9731 | 0.971 | 0.974 | 0.9805 |
 
 ### V03 archetype slope too
 
-- Run at 2026-10-09 08:37 UTC. Config: estimator `platt_arch_slope` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:58 UTC. Config: estimator `platt_arch_slope` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Archetype-specific slope as well as intercept.
-- Train (in-sample): Brier 0.10322 vs market 0.10497; 923 trades, P&L 15.915.
-- Test: Brier 0.0901 vs market 0.09047 (Δ CI [-0.0012, 0.00043]); 169 trades on 113 events, P&L 0.987, per trade 0.0058 (CI [-0.0732, 0.0799]), hit rate 0.675, return on cost 0.0087, top-event share of P&L 1.998.
+- Train (in-sample): Brier 0.1058 vs market 0.10761; 996 trades, P&L 26.321.
+- Test: Brier 0.08773 vs market 0.08813 (Δ CI [-0.00105, 0.00034]); 194 trades on 136 events, P&L 0.301, per trade 0.0016 (CI [-0.072, 0.0698]), hit rate 0.644, return on cost 0.0024, top-event share of P&L 6.546.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4995 | 0.0184 | 0.0228 | 0.0132 | 0.0084 |
-| 0.05-0.10 | 1351 | 0.0718 | 0.0694 | 0.078 | 0.0547 |
-| 0.10-0.20 | 1353 | 0.1467 | 0.1435 | 0.1252 | 0.1078 |
-| 0.20-0.30 | 732 | 0.25 | 0.2425 | 0.2237 | 0.1921 |
-| 0.30-0.40 | 566 | 0.349 | 0.3443 | 0.3504 | 0.33 |
-| 0.40-0.50 | 554 | 0.4516 | 0.4509 | 0.4278 | 0.3985 |
-| 0.50-0.60 | 480 | 0.5473 | 0.5443 | 0.5956 | 0.5513 |
-| 0.60-0.70 | 561 | 0.6481 | 0.6479 | 0.7171 | 0.6759 |
-| 0.70-0.80 | 578 | 0.7505 | 0.751 | 0.7641 | 0.7784 |
-| 0.80-0.90 | 773 | 0.8535 | 0.8502 | 0.8679 | 0.8727 |
-| 0.90-0.95 | 658 | 0.9285 | 0.9258 | 0.9109 | 0.9263 |
-| 0.95-1.00 | 1147 | 0.974 | 0.9707 | 0.9781 | 0.977 |
+| 0.00-0.05 | 5823 | 0.0189 | 0.0229 | 0.0129 | 0.009 |
+| 0.05-0.10 | 1511 | 0.0724 | 0.0691 | 0.0775 | 0.0489 |
+| 0.10-0.20 | 1541 | 0.1476 | 0.1433 | 0.1225 | 0.109 |
+| 0.20-0.30 | 826 | 0.2472 | 0.2432 | 0.2351 | 0.2037 |
+| 0.30-0.40 | 614 | 0.3485 | 0.3445 | 0.3649 | 0.3227 |
+| 0.40-0.50 | 641 | 0.4522 | 0.4512 | 0.4403 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5526 | 0.5436 | 0.5952 | 0.5506 |
+| 0.60-0.70 | 598 | 0.6506 | 0.6476 | 0.7142 | 0.6779 |
+| 0.70-0.80 | 609 | 0.7508 | 0.7513 | 0.779 | 0.7904 |
+| 0.80-0.90 | 849 | 0.8531 | 0.8502 | 0.8663 | 0.8714 |
+| 0.90-0.95 | 732 | 0.9282 | 0.9255 | 0.9124 | 0.9241 |
+| 0.95-1.00 | 1315 | 0.9743 | 0.971 | 0.9806 | 0.9805 |
 
 ### V04 isotonic recalibration
 
-- Run at 2026-10-09 08:38 UTC. Config: estimator `isotonic` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:58 UTC. Config: estimator `isotonic` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Non-parametric calibration of mid.
-- Train (in-sample): Brier 0.10428 vs market 0.10497; 0 trades, P&L 0.0.
-- Test: Brier 0.09058 vs market 0.09047 (Δ CI [-0.00024, 0.00043]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10685 vs market 0.10761; 254 trades, P&L 8.039.
+- Test: Brier 0.08817 vs market 0.08813 (Δ CI [-0.00038, 0.00035]); 49 trades on 43 events, P&L 0.223, per trade 0.0046 (CI [-0.1208, 0.1404]), hit rate 0.531, return on cost 0.0087, top-event share of P&L 2.207.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4464 | 0.0131 | 0.0228 | 0.0089 | 0.0084 |
-| 0.05-0.10 | 1720 | 0.0625 | 0.0694 | 0.0579 | 0.0547 |
-| 0.10-0.20 | 1315 | 0.1411 | 0.1435 | 0.1317 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2436 | 0.2425 | 0.1884 | 0.1921 |
-| 0.30-0.40 | 524 | 0.3392 | 0.3443 | 0.3311 | 0.33 |
-| 0.40-0.50 | 780 | 0.4375 | 0.4509 | 0.4072 | 0.3985 |
-| 0.50-0.60 | 519 | 0.5526 | 0.5443 | 0.596 | 0.5513 |
-| 0.60-0.70 | 489 | 0.6357 | 0.6479 | 0.6776 | 0.6759 |
-| 0.70-0.80 | 462 | 0.7486 | 0.751 | 0.758 | 0.7784 |
-| 0.80-0.90 | 1060 | 0.8572 | 0.8502 | 0.8663 | 0.8727 |
-| 0.90-0.95 | 199 | 0.9045 | 0.9258 | 0.9524 | 0.9263 |
-| 0.95-1.00 | 1489 | 0.9711 | 0.9707 | 0.9561 | 0.977 |
+| 0.00-0.05 | 4935 | 0.0127 | 0.0229 | 0.0089 | 0.009 |
+| 0.05-0.10 | 2115 | 0.0632 | 0.0691 | 0.0504 | 0.0489 |
+| 0.10-0.20 | 1575 | 0.1453 | 0.1433 | 0.1271 | 0.109 |
+| 0.20-0.30 | 1110 | 0.2508 | 0.2432 | 0.2113 | 0.2037 |
+| 0.30-0.40 | 332 | 0.3663 | 0.3445 | 0.3861 | 0.3227 |
+| 0.40-0.50 | 826 | 0.4123 | 0.4512 | 0.4084 | 0.3927 |
+| 0.50-0.60 | 580 | 0.5505 | 0.5436 | 0.5955 | 0.5506 |
+| 0.60-0.70 | 533 | 0.6361 | 0.6476 | 0.6757 | 0.6779 |
+| 0.70-0.80 | 594 | 0.7533 | 0.7513 | 0.7752 | 0.7904 |
+| 0.80-0.90 | 1077 | 0.8611 | 0.8502 | 0.8723 | 0.8714 |
+| 0.90-0.95 | 224 | 0.904 | 0.9255 | 0.9476 | 0.9241 |
+| 0.95-1.00 | 1697 | 0.9696 | 0.971 | 0.9595 | 0.9805 |
 
 ### V05 paper FLB prior (no fit)
 
-- Run at 2026-10-09 08:38 UTC. Config: estimator `paper_flb` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:59 UTC. Config: estimator `paper_flb` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Burgi et al. Table 8 politics coefficients applied as-is.
-- Train (in-sample): Brier 0.10485 vs market 0.10497; 0 trades, P&L 0.0.
-- Test: Brier 0.09018 vs market 0.09047 (Δ CI [-0.00047, -0.00012]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10751 vs market 0.10761; 0 trades, P&L 0.0.
+- Test: Brier 0.08783 vs market 0.08813 (Δ CI [-0.00046, -0.00016]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5082 | 0.0126 | 0.0228 | 0.0132 | 0.0084 |
-| 0.05-0.10 | 1104 | 0.0728 | 0.0694 | 0.0653 | 0.0547 |
-| 0.10-0.20 | 1348 | 0.1439 | 0.1435 | 0.1291 | 0.1078 |
-| 0.20-0.30 | 800 | 0.2437 | 0.2425 | 0.1961 | 0.1921 |
-| 0.30-0.40 | 577 | 0.3479 | 0.3443 | 0.3522 | 0.33 |
-| 0.40-0.50 | 559 | 0.4547 | 0.4509 | 0.408 | 0.3985 |
-| 0.50-0.60 | 554 | 0.549 | 0.5443 | 0.5899 | 0.5513 |
-| 0.60-0.70 | 566 | 0.6497 | 0.6479 | 0.683 | 0.6759 |
-| 0.70-0.80 | 626 | 0.753 | 0.751 | 0.778 | 0.7784 |
-| 0.80-0.90 | 792 | 0.851 | 0.8502 | 0.8712 | 0.8727 |
-| 0.90-0.95 | 710 | 0.9264 | 0.9258 | 0.9273 | 0.9263 |
-| 0.95-1.00 | 1030 | 0.9728 | 0.9707 | 0.9767 | 0.977 |
+| 0.00-0.05 | 5920 | 0.0129 | 0.0229 | 0.0128 | 0.009 |
+| 0.05-0.10 | 1236 | 0.0735 | 0.0691 | 0.0676 | 0.0489 |
+| 0.10-0.20 | 1512 | 0.1444 | 0.1433 | 0.1285 | 0.109 |
+| 0.20-0.30 | 915 | 0.244 | 0.2432 | 0.2041 | 0.2037 |
+| 0.30-0.40 | 631 | 0.3493 | 0.3445 | 0.3502 | 0.3227 |
+| 0.40-0.50 | 614 | 0.4556 | 0.4512 | 0.4016 | 0.3927 |
+| 0.50-0.60 | 616 | 0.5481 | 0.5436 | 0.5898 | 0.5506 |
+| 0.60-0.70 | 622 | 0.6495 | 0.6476 | 0.6875 | 0.6779 |
+| 0.70-0.80 | 690 | 0.7537 | 0.7513 | 0.7837 | 0.7904 |
+| 0.80-0.90 | 859 | 0.8509 | 0.8502 | 0.874 | 0.8714 |
+| 0.90-0.95 | 796 | 0.9261 | 0.9255 | 0.9253 | 0.9241 |
+| 0.95-1.00 | 1187 | 0.9732 | 0.971 | 0.9803 | 0.9805 |
 
 ### V06 microstructure logistic
 
-- Run at 2026-10-09 08:39 UTC. Config: estimator `rich` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:59 UTC. Config: estimator `rich` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Adds spread, volume, OI, age, 7d drift, field size.
-- Train (in-sample): Brier 0.10435 vs market 0.10497; 3 trades, P&L -1.128.
-- Test: Brier 0.0899 vs market 0.09047 (Δ CI [-0.001, -0.00011]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10686 vs market 0.10761; 3 trades, P&L -0.52.
+- Test: Brier 0.08763 vs market 0.08813 (Δ CI [-0.00095, -7e-05]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4967 | 0.0198 | 0.0228 | 0.0131 | 0.0084 |
-| 0.05-0.10 | 1252 | 0.0717 | 0.0694 | 0.0578 | 0.0547 |
-| 0.10-0.20 | 1420 | 0.1446 | 0.1435 | 0.1317 | 0.1078 |
-| 0.20-0.30 | 770 | 0.2477 | 0.2425 | 0.2085 | 0.1921 |
-| 0.30-0.40 | 583 | 0.3492 | 0.3443 | 0.3395 | 0.33 |
-| 0.40-0.50 | 502 | 0.4487 | 0.4509 | 0.4412 | 0.3985 |
-| 0.50-0.60 | 484 | 0.5496 | 0.5443 | 0.5547 | 0.5513 |
-| 0.60-0.70 | 565 | 0.6521 | 0.6479 | 0.6968 | 0.6759 |
-| 0.70-0.80 | 559 | 0.753 | 0.751 | 0.7489 | 0.7784 |
-| 0.80-0.90 | 788 | 0.8504 | 0.8502 | 0.8554 | 0.8727 |
-| 0.90-0.95 | 656 | 0.9283 | 0.9258 | 0.929 | 0.9263 |
-| 0.95-1.00 | 1202 | 0.9746 | 0.9707 | 0.9652 | 0.977 |
+| 0.00-0.05 | 5703 | 0.0205 | 0.0229 | 0.0118 | 0.009 |
+| 0.05-0.10 | 1447 | 0.0721 | 0.0691 | 0.0609 | 0.0489 |
+| 0.10-0.20 | 1629 | 0.1456 | 0.1433 | 0.1301 | 0.109 |
+| 0.20-0.30 | 911 | 0.2485 | 0.2432 | 0.2056 | 0.2037 |
+| 0.30-0.40 | 658 | 0.3482 | 0.3445 | 0.3524 | 0.3227 |
+| 0.40-0.50 | 537 | 0.4508 | 0.4512 | 0.4527 | 0.3927 |
+| 0.50-0.60 | 543 | 0.5513 | 0.5436 | 0.5719 | 0.5506 |
+| 0.60-0.70 | 610 | 0.6511 | 0.6476 | 0.6822 | 0.6779 |
+| 0.70-0.80 | 628 | 0.7533 | 0.7513 | 0.7706 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8506 | 0.8502 | 0.8574 | 0.8714 |
+| 0.90-0.95 | 757 | 0.9283 | 0.9255 | 0.9322 | 0.9241 |
+| 0.95-1.00 | 1315 | 0.9744 | 0.971 | 0.9695 | 0.9805 |
 
 ### V07 reversion term
 
-- Run at 2026-10-09 08:39 UTC. Config: estimator `reversion` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 19:59 UTC. Config: estimator `reversion` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Adds last week's mid change (tests momentum vs mean reversion).
-- Train (in-sample): Brier 0.10477 vs market 0.10497; 0 trades, P&L 0.0.
-- Test: Brier 0.08988 vs market 0.09047 (Δ CI [-0.00087, -0.00035]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10741 vs market 0.10761; 0 trades, P&L 0.0.
+- Test: Brier 0.08762 vs market 0.08813 (Δ CI [-0.0007, -0.0003]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4881 | 0.0195 | 0.0228 | 0.0123 | 0.0084 |
-| 0.05-0.10 | 1315 | 0.07 | 0.0694 | 0.059 | 0.0547 |
-| 0.10-0.20 | 1434 | 0.1434 | 0.1435 | 0.1284 | 0.1078 |
-| 0.20-0.30 | 747 | 0.2462 | 0.2425 | 0.2196 | 0.1921 |
-| 0.30-0.40 | 540 | 0.3481 | 0.3443 | 0.3469 | 0.33 |
-| 0.40-0.50 | 524 | 0.4521 | 0.4509 | 0.4113 | 0.3985 |
-| 0.50-0.60 | 528 | 0.5465 | 0.5443 | 0.5648 | 0.5513 |
-| 0.60-0.70 | 554 | 0.6509 | 0.6479 | 0.6772 | 0.6759 |
-| 0.70-0.80 | 585 | 0.7518 | 0.751 | 0.7614 | 0.7784 |
-| 0.80-0.90 | 778 | 0.8502 | 0.8502 | 0.8583 | 0.8727 |
-| 0.90-0.95 | 662 | 0.9274 | 0.9258 | 0.9259 | 0.9263 |
-| 0.95-1.00 | 1200 | 0.9744 | 0.9707 | 0.971 | 0.977 |
+| 0.00-0.05 | 5624 | 0.0209 | 0.0229 | 0.0116 | 0.009 |
+| 0.05-0.10 | 1493 | 0.0717 | 0.0691 | 0.0606 | 0.0489 |
+| 0.10-0.20 | 1644 | 0.1452 | 0.1433 | 0.1263 | 0.109 |
+| 0.20-0.30 | 863 | 0.2469 | 0.2432 | 0.2216 | 0.2037 |
+| 0.30-0.40 | 600 | 0.3483 | 0.3445 | 0.347 | 0.3227 |
+| 0.40-0.50 | 616 | 0.4538 | 0.4512 | 0.3956 | 0.3927 |
+| 0.50-0.60 | 572 | 0.5463 | 0.5436 | 0.5974 | 0.5506 |
+| 0.60-0.70 | 629 | 0.6488 | 0.6476 | 0.6742 | 0.6779 |
+| 0.70-0.80 | 657 | 0.7537 | 0.7513 | 0.7888 | 0.7904 |
+| 0.80-0.90 | 867 | 0.8527 | 0.8502 | 0.8666 | 0.8714 |
+| 0.90-0.95 | 734 | 0.9273 | 0.9255 | 0.9276 | 0.9241 |
+| 0.95-1.00 | 1299 | 0.9735 | 0.971 | 0.9768 | 0.9805 |
 
 ### V08 blend with market
 
-- Run at 2026-10-09 08:39 UTC. Config: estimator `blend` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:00 UTC. Config: estimator `blend` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: w*old_plan + (1-w)*market, w picked on a validation tail inside train.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 603 trades, P&L 19.352.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 88 trades on 59 events, P&L 3.156, per trade 0.0359 (CI [-0.0852, 0.1463]), hit rate 0.568, return on cost 0.0674, top-event share of P&L 0.625.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 570 trades, P&L 17.231.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 90 trades on 63 events, P&L 3.12, per trade 0.0347 (CI [-0.0806, 0.1527]), hit rate 0.533, return on cost 0.0695, top-event share of P&L 0.632.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V09 sum-to-one normalisation
 
-- Run at 2026-10-09 08:40 UTC. Config: estimator `sum_to_one` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:00 UTC. Config: estimator `sum_to_one` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Normalise exclusive fields to sum 1 before recalibrating.
-- Train (in-sample): Brier 0.10485 vs market 0.10497; 17 trades, P&L -0.851.
-- Test: Brier 0.09006 vs market 0.09047 (Δ CI [-0.00063, -0.00019]); 4 trades on 4 events, P&L -0.071, per trade -0.0177 (CI None), hit rate 0.25, return on cost -0.0662, top-event share of P&L None.
+- Train (in-sample): Brier 0.10747 vs market 0.10761; 19 trades, P&L -0.475.
+- Test: Brier 0.08779 vs market 0.08813 (Δ CI [-0.00052, -0.00016]); 7 trades on 7 events, P&L -0.891, per trade -0.1273 (CI [-0.2909, 0.1061]), hit rate 0.143, return on cost -0.4712, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 4895 | 0.0196 | 0.0228 | 0.0124 | 0.0084 |
-| 0.05-0.10 | 1298 | 0.0699 | 0.0694 | 0.0598 | 0.0547 |
-| 0.10-0.20 | 1449 | 0.1429 | 0.1435 | 0.1263 | 0.1078 |
-| 0.20-0.30 | 741 | 0.2455 | 0.2425 | 0.2216 | 0.1921 |
-| 0.30-0.40 | 533 | 0.3464 | 0.3443 | 0.3528 | 0.33 |
-| 0.40-0.50 | 560 | 0.4545 | 0.4509 | 0.4084 | 0.3985 |
-| 0.50-0.60 | 494 | 0.55 | 0.5443 | 0.5805 | 0.5513 |
-| 0.60-0.70 | 582 | 0.6528 | 0.6479 | 0.6811 | 0.6759 |
-| 0.70-0.80 | 570 | 0.7561 | 0.751 | 0.7606 | 0.7784 |
-| 0.80-0.90 | 790 | 0.8531 | 0.8502 | 0.8661 | 0.8727 |
-| 0.90-0.95 | 653 | 0.9276 | 0.9258 | 0.9321 | 0.9263 |
-| 0.95-1.00 | 1183 | 0.9738 | 0.9707 | 0.9662 | 0.977 |
+| 0.00-0.05 | 5660 | 0.021 | 0.0229 | 0.0119 | 0.009 |
+| 0.05-0.10 | 1494 | 0.0724 | 0.0691 | 0.0609 | 0.0489 |
+| 0.10-0.20 | 1589 | 0.1447 | 0.1433 | 0.1275 | 0.109 |
+| 0.20-0.30 | 891 | 0.2448 | 0.2432 | 0.2202 | 0.2037 |
+| 0.30-0.40 | 588 | 0.347 | 0.3445 | 0.3498 | 0.3227 |
+| 0.40-0.50 | 616 | 0.4525 | 0.4512 | 0.4018 | 0.3927 |
+| 0.50-0.60 | 575 | 0.5456 | 0.5436 | 0.5876 | 0.5506 |
+| 0.60-0.70 | 637 | 0.6484 | 0.6476 | 0.6807 | 0.6779 |
+| 0.70-0.80 | 641 | 0.7526 | 0.7513 | 0.7808 | 0.7904 |
+| 0.80-0.90 | 876 | 0.8509 | 0.8502 | 0.864 | 0.8714 |
+| 0.90-0.95 | 760 | 0.9267 | 0.9255 | 0.9345 | 0.9241 |
+| 0.95-1.00 | 1271 | 0.9731 | 0.971 | 0.9736 | 0.9805 |
 
 ### V10 recency: last 365d of train
 
-- Run at 2026-10-09 08:40 UTC. Config: estimator `old_plan` {'recency_days': 365}, min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:01 UTC. Config: estimator `old_plan` {'recency_days': 365}, min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Fit only on the most recent year of train (bias may be fading, Burgi Table 9).
-- Train (in-sample): Brier 0.10377 vs market 0.10497; 614 trades, P&L 15.616.
-- Test: Brier 0.08951 vs market 0.09047 (Δ CI [-0.00153, -0.0004]); 95 trades on 65 events, P&L 2.344, per trade 0.0247 (CI [-0.0756, 0.1411]), hit rate 0.547, return on cost 0.0472, top-event share of P&L 0.842.
+- Train (in-sample): Brier 0.10653 vs market 0.10761; 590 trades, P&L 17.985.
+- Test: Brier 0.08717 vs market 0.08813 (Δ CI [-0.00142, -0.0004]); 94 trades on 63 events, P&L 2.759, per trade 0.0294 (CI [-0.0747, 0.1347]), hit rate 0.564, return on cost 0.0549, top-event share of P&L 0.715.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5049 | 0.0193 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1234 | 0.0719 | 0.0694 | 0.0622 | 0.0547 |
-| 0.10-0.20 | 1379 | 0.1432 | 0.1435 | 0.1313 | 0.1078 |
-| 0.20-0.30 | 755 | 0.248 | 0.2425 | 0.2272 | 0.1921 |
-| 0.30-0.40 | 513 | 0.3465 | 0.3443 | 0.3468 | 0.33 |
-| 0.40-0.50 | 529 | 0.451 | 0.4509 | 0.414 | 0.3985 |
-| 0.50-0.60 | 485 | 0.5462 | 0.5443 | 0.5459 | 0.5513 |
-| 0.60-0.70 | 552 | 0.6493 | 0.6479 | 0.6904 | 0.6759 |
-| 0.70-0.80 | 595 | 0.7539 | 0.751 | 0.7529 | 0.7784 |
-| 0.80-0.90 | 748 | 0.8513 | 0.8502 | 0.8572 | 0.8727 |
-| 0.90-0.95 | 667 | 0.9269 | 0.9258 | 0.9299 | 0.9263 |
-| 0.95-1.00 | 1242 | 0.9753 | 0.9707 | 0.9681 | 0.977 |
+| 0.00-0.05 | 5879 | 0.0197 | 0.0229 | 0.015 | 0.009 |
+| 0.05-0.10 | 1399 | 0.0728 | 0.0691 | 0.064 | 0.0489 |
+| 0.10-0.20 | 1540 | 0.1436 | 0.1433 | 0.127 | 0.109 |
+| 0.20-0.30 | 859 | 0.2473 | 0.2432 | 0.2339 | 0.2037 |
+| 0.30-0.40 | 588 | 0.3491 | 0.3445 | 0.3596 | 0.3227 |
+| 0.40-0.50 | 598 | 0.4549 | 0.4512 | 0.4192 | 0.3927 |
+| 0.50-0.60 | 526 | 0.5502 | 0.5436 | 0.5661 | 0.5506 |
+| 0.60-0.70 | 606 | 0.6504 | 0.6476 | 0.7034 | 0.6779 |
+| 0.70-0.80 | 630 | 0.7537 | 0.7513 | 0.7549 | 0.7904 |
+| 0.80-0.90 | 840 | 0.8512 | 0.8502 | 0.8628 | 0.8714 |
+| 0.90-0.95 | 722 | 0.9267 | 0.9255 | 0.9208 | 0.9241 |
+| 0.95-1.00 | 1411 | 0.9752 | 0.971 | 0.9747 | 0.9805 |
 
 ### V11 min_edge 2c
 
-- Run at 2026-10-09 08:41 UTC. Config: estimator `old_plan` , min_edge 0.02, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:01 UTC. Config: estimator `old_plan` , min_edge 0.02, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Lower trade threshold.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 1463 trades, P&L 7.218.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 281 trades on 184 events, P&L 1.605, per trade 0.0057 (CI [-0.0441, 0.0583]), hit rate 0.633, return on cost 0.0091, top-event share of P&L 1.59.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 1294 trades, P&L 4.823.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 283 trades on 182 events, P&L -1.275, per trade -0.0045 (CI [-0.0564, 0.0548]), hit rate 0.604, return on cost -0.0074, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V12 min_edge 10c
 
-- Run at 2026-10-09 08:41 UTC. Config: estimator `old_plan` , min_edge 0.1, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:02 UTC. Config: estimator `old_plan` , min_edge 0.1, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Higher trade threshold.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 117 trades, P&L 17.426.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 8 trades on 8 events, P&L 0.642, per trade 0.0802 (CI [-0.2886, 0.355]), hit rate 0.625, return on cost 0.1473, top-event share of P&L 0.783.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 1 trades, P&L 0.508.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V13 edge in logit space
 
-- Run at 2026-10-09 08:41 UTC. Config: estimator `old_plan` , min_edge 0.25, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space logit, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:02 UTC. Config: estimator `old_plan` , min_edge 0.25, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space logit, filter None, fee_rate 0.07.
 - What changed: Require 0.25 logit units of edge instead of cents.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 1014 trades, P&L 20.063.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 166 trades on 115 events, P&L -1.729, per trade -0.0104 (CI [-0.0788, 0.0565]), hit rate 0.693, return on cost -0.0148, top-event share of P&L None.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 763 trades, P&L 15.643.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 154 trades on 102 events, P&L 1.794, per trade 0.0117 (CI [-0.0595, 0.0889]), hit rate 0.675, return on cost 0.0176, top-event share of P&L 0.92.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V14 YES side only
 
-- Run at 2026-10-09 08:42 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides yes, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:02 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides yes, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Only buy YES.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 541 trades, P&L 12.682.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 80 trades on 51 events, P&L 2.685, per trade 0.0336 (CI [-0.091, 0.1476]), hit rate 0.562, return on cost 0.0634, top-event share of P&L 0.735.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 506 trades, P&L 10.46.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 80 trades on 53 events, P&L 1.969, per trade 0.0246 (CI [-0.1056, 0.152]), hit rate 0.525, return on cost 0.0492, top-event share of P&L 1.002.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V15 NO side only
 
-- Run at 2026-10-09 08:42 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides no, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:03 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides no, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Only buy NO (longshot-fade direction).
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 62 trades, P&L 6.67.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 8 trades on 8 events, P&L 0.471, per trade 0.0589 (CI [-0.2631, 0.3785]), hit rate 0.625, return on cost 0.104, top-event share of P&L 1.196.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 64 trades, P&L 6.77.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 10 trades on 10 events, P&L 1.152, per trade 0.1152 (CI [-0.1703, 0.3976]), hit rate 0.6, return on cost 0.2375, top-event share of P&L 0.676.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V16 favourites only (>=50c)
 
-- Run at 2026-10-09 08:42 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.5–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:03 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.5–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Entry price >= 50c.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 373 trades, P&L 17.926.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 57 trades on 43 events, P&L 3.572, per trade 0.0627 (CI [-0.0555, 0.1811]), hit rate 0.719, return on cost 0.0954, top-event share of P&L 0.383.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 349 trades, P&L 14.519.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 55 trades on 42 events, P&L 3.219, per trade 0.0585 (CI [-0.0725, 0.1843]), hit rate 0.691, return on cost 0.0925, top-event share of P&L 0.425.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V17 tails excluded (15-85c)
 
-- Run at 2026-10-09 08:43 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.15–0.85, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:04 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.15–0.85, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Trade only the middle of the price range.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 602 trades, P&L 19.306.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 88 trades on 59 events, P&L 3.156, per trade 0.0359 (CI [-0.0852, 0.1463]), hit rate 0.568, return on cost 0.0674, top-event share of P&L 0.625.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 570 trades, P&L 17.231.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 90 trades on 63 events, P&L 3.12, per trade 0.0347 (CI [-0.0806, 0.1527]), hit rate 0.533, return on cost 0.0695, top-event share of P&L 0.632.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V18 tight books only (spread<=4c)
 
-- Run at 2026-10-09 08:43 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter liquid, fee_rate 0.07.
+- Run at 2026-10-09 20:04 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter liquid, fee_rate 0.07.
 - What changed: Universe filter.
-- Train (in-sample): Brier 0.08633 vs market 0.08746; 486 trades, P&L 17.646.
-- Test: Brier 0.07061 vs market 0.07123 (Δ CI [-0.00111, -9e-05]); 57 trades on 41 events, P&L 6.856, per trade 0.1203 (CI [-0.0067, 0.2626]), hit rate 0.614, return on cost 0.2436, top-event share of P&L 0.19.
+- Train (in-sample): Brier 0.08806 vs market 0.08902; 463 trades, P&L 12.38.
+- Test: Brier 0.06863 vs market 0.06915 (Δ CI [-0.00098, -7e-05]); 60 trades on 45 events, P&L 6.247, per trade 0.1041 (CI [-0.0275, 0.238]), hit rate 0.567, return on cost 0.2251, top-event share of P&L 0.208.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 3933 | 0.0169 | 0.0215 | 0.0121 | 0.0074 |
-| 0.05-0.10 | 548 | 0.071 | 0.0714 | 0.0845 | 0.0662 |
-| 0.10-0.20 | 509 | 0.1439 | 0.144 | 0.1478 | 0.1305 |
-| 0.20-0.30 | 254 | 0.247 | 0.2482 | 0.2114 | 0.2028 |
-| 0.30-0.40 | 177 | 0.3463 | 0.3435 | 0.3798 | 0.3197 |
-| 0.40-0.50 | 145 | 0.4489 | 0.4467 | 0.4577 | 0.4445 |
-| 0.50-0.60 | 144 | 0.5512 | 0.5524 | 0.5498 | 0.5496 |
-| 0.60-0.70 | 193 | 0.652 | 0.6511 | 0.6814 | 0.6515 |
-| 0.70-0.80 | 168 | 0.7512 | 0.7501 | 0.7628 | 0.8005 |
-| 0.80-0.90 | 304 | 0.8509 | 0.8466 | 0.8463 | 0.8504 |
-| 0.90-0.95 | 294 | 0.9296 | 0.9267 | 0.8906 | 0.8838 |
-| 0.95-1.00 | 765 | 0.9778 | 0.9742 | 0.9645 | 0.9708 |
+| 0.00-0.05 | 4448 | 0.0175 | 0.0216 | 0.0106 | 0.0073 |
+| 0.05-0.10 | 692 | 0.0713 | 0.0714 | 0.082 | 0.0621 |
+| 0.10-0.20 | 581 | 0.1443 | 0.1431 | 0.1441 | 0.1277 |
+| 0.20-0.30 | 306 | 0.2451 | 0.2478 | 0.2294 | 0.2222 |
+| 0.30-0.40 | 194 | 0.3459 | 0.3435 | 0.3796 | 0.3107 |
+| 0.40-0.50 | 162 | 0.4465 | 0.4465 | 0.4377 | 0.443 |
+| 0.50-0.60 | 159 | 0.5516 | 0.5531 | 0.5443 | 0.542 |
+| 0.60-0.70 | 205 | 0.6499 | 0.6511 | 0.7225 | 0.6545 |
+| 0.70-0.80 | 197 | 0.7504 | 0.7512 | 0.7842 | 0.8145 |
+| 0.80-0.90 | 330 | 0.8504 | 0.8472 | 0.854 | 0.8509 |
+| 0.90-0.95 | 342 | 0.9295 | 0.9267 | 0.8897 | 0.8935 |
+| 0.95-1.00 | 824 | 0.9777 | 0.9746 | 0.9741 | 0.9743 |
 
 ### V19 mature markets (age>=30d)
 
-- Run at 2026-10-09 08:43 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter mature, fee_rate 0.07.
+- Run at 2026-10-09 20:05 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter mature, fee_rate 0.07.
 - What changed: Universe filter.
-- Train (in-sample): Brier 0.07889 vs market 0.08035; 311 trades, P&L 10.071.
-- Test: Brier 0.06035 vs market 0.06134 (Δ CI [-0.00158, -0.00048]); 34 trades on 28 events, P&L 3.321, per trade 0.0977 (CI [-0.0762, 0.2481]), hit rate 0.588, return on cost 0.1991, top-event share of P&L 0.33.
+- Train (in-sample): Brier 0.07932 vs market 0.08063; 294 trades, P&L 5.431.
+- Test: Brier 0.0585 vs market 0.05931 (Δ CI [-0.00135, -0.00025]); 39 trades on 32 events, P&L 3.863, per trade 0.099 (CI [-0.0567, 0.2678]), hit rate 0.564, return on cost 0.213, top-event share of P&L 0.284.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 3889 | 0.0165 | 0.0206 | 0.0116 | 0.0083 |
-| 0.05-0.10 | 669 | 0.0725 | 0.0684 | 0.089 | 0.0522 |
-| 0.10-0.20 | 725 | 0.1447 | 0.144 | 0.0923 | 0.0978 |
-| 0.20-0.30 | 346 | 0.2471 | 0.2412 | 0.2149 | 0.1817 |
-| 0.30-0.40 | 245 | 0.3496 | 0.342 | 0.4579 | 0.3332 |
-| 0.40-0.50 | 240 | 0.4509 | 0.451 | 0.4774 | 0.4146 |
-| 0.50-0.60 | 201 | 0.5528 | 0.5485 | 0.5465 | 0.6308 |
-| 0.60-0.70 | 284 | 0.6455 | 0.6459 | 0.685 | 0.6564 |
-| 0.70-0.80 | 308 | 0.7555 | 0.7534 | 0.7907 | 0.7874 |
-| 0.80-0.90 | 463 | 0.8537 | 0.8522 | 0.8666 | 0.8792 |
-| 0.90-0.95 | 390 | 0.9276 | 0.9272 | 0.9611 | 0.9569 |
-| 0.95-1.00 | 831 | 0.9749 | 0.9715 | 0.991 | 0.9939 |
+| 0.00-0.05 | 4505 | 0.0171 | 0.0207 | 0.0095 | 0.0075 |
+| 0.05-0.10 | 822 | 0.072 | 0.0677 | 0.076 | 0.0445 |
+| 0.10-0.20 | 828 | 0.1436 | 0.1438 | 0.1072 | 0.1066 |
+| 0.20-0.30 | 429 | 0.2455 | 0.2424 | 0.2061 | 0.1928 |
+| 0.30-0.40 | 285 | 0.3487 | 0.3435 | 0.449 | 0.3236 |
+| 0.40-0.50 | 285 | 0.4503 | 0.45 | 0.452 | 0.4068 |
+| 0.50-0.60 | 251 | 0.5552 | 0.5485 | 0.5264 | 0.5919 |
+| 0.60-0.70 | 318 | 0.6455 | 0.6445 | 0.7432 | 0.674 |
+| 0.70-0.80 | 365 | 0.7529 | 0.7531 | 0.8087 | 0.8068 |
+| 0.80-0.90 | 537 | 0.854 | 0.8518 | 0.8791 | 0.8775 |
+| 0.90-0.95 | 495 | 0.9293 | 0.9267 | 0.9523 | 0.9524 |
+| 0.95-1.00 | 880 | 0.9748 | 0.9718 | 0.9946 | 0.995 |
 
 ### V20 maker execution
 
-- Run at 2026-10-09 08:43 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution maker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:05 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution maker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Join the best bid; filled only if price trades through within a week; no maker fee on political series (verified on API).
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 3424 trades, P&L 5.5.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 824 trades on 442 events, P&L -22.237, per trade -0.027 (CI [-0.0543, 0.0029]), hit rate 0.62, return on cost -0.0417, top-event share of P&L None.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 3315 trades, P&L 3.496.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 930 trades on 481 events, P&L -15.038, per trade -0.0162 (CI [-0.0423, 0.0149]), hit rate 0.589, return on cost -0.0267, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V21 low-sophistication markets
 
-- Run at 2026-10-09 08:44 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter soph_low, fee_rate 0.07.
+- Run at 2026-10-09 20:06 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter soph_low, fee_rate 0.07.
 - What changed: Bottom tercile of the composite sophistication score (train cut points).
-- Train (in-sample): Brier 0.11906 vs market 0.11932; 163 trades, P&L 11.693.
-- Test: Brier 0.10001 vs market 0.10098 (Δ CI [-0.00194, 6e-05]); 18 trades on 14 events, P&L 1.625, per trade 0.0903 (CI [-0.2197, 0.288]), hit rate 0.667, return on cost 0.1566, top-event share of P&L 1.122.
+- Train (in-sample): Brier 0.1209 vs market 0.12128; 151 trades, P&L 10.171.
+- Test: Brier 0.09724 vs market 0.09847 (Δ CI [-0.0021, -0.00031]); 18 trades on 14 events, P&L 2.805, per trade 0.1558 (CI [-0.1084, 0.3304]), hit rate 0.667, return on cost 0.3051, top-event share of P&L 0.65.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 2134 | 0.0195 | 0.0234 | 0.016 | 0.0136 |
-| 0.05-0.10 | 338 | 0.0728 | 0.0682 | 0.0863 | 0.0571 |
-| 0.10-0.20 | 456 | 0.1418 | 0.1444 | 0.138 | 0.1361 |
-| 0.20-0.30 | 198 | 0.2503 | 0.2399 | 0.2911 | 0.1858 |
-| 0.30-0.40 | 176 | 0.3551 | 0.3423 | 0.2647 | 0.3096 |
-| 0.40-0.50 | 199 | 0.4543 | 0.4528 | 0.4462 | 0.322 |
-| 0.50-0.60 | 128 | 0.5461 | 0.5385 | 0.5225 | 0.5592 |
-| 0.60-0.70 | 171 | 0.6495 | 0.646 | 0.7122 | 0.6527 |
-| 0.70-0.80 | 154 | 0.75 | 0.7463 | 0.7073 | 0.7343 |
-| 0.80-0.90 | 235 | 0.8489 | 0.851 | 0.8131 | 0.8348 |
-| 0.90-0.95 | 188 | 0.9249 | 0.9253 | 0.9203 | 0.9345 |
-| 0.95-1.00 | 366 | 0.971 | 0.9667 | 0.9737 | 0.9792 |
+| 0.00-0.05 | 2459 | 0.0196 | 0.0229 | 0.0151 | 0.0135 |
+| 0.05-0.10 | 403 | 0.0724 | 0.0678 | 0.0805 | 0.0531 |
+| 0.10-0.20 | 493 | 0.1428 | 0.144 | 0.1324 | 0.1331 |
+| 0.20-0.30 | 230 | 0.2518 | 0.2415 | 0.3009 | 0.1843 |
+| 0.30-0.40 | 193 | 0.3563 | 0.3423 | 0.2428 | 0.3093 |
+| 0.40-0.50 | 241 | 0.452 | 0.4513 | 0.4157 | 0.3012 |
+| 0.50-0.60 | 146 | 0.5487 | 0.5381 | 0.5631 | 0.5472 |
+| 0.60-0.70 | 176 | 0.6502 | 0.6459 | 0.7258 | 0.6676 |
+| 0.70-0.80 | 175 | 0.7516 | 0.7464 | 0.7271 | 0.743 |
+| 0.80-0.90 | 258 | 0.8513 | 0.8509 | 0.8194 | 0.8333 |
+| 0.90-0.95 | 239 | 0.9267 | 0.9244 | 0.9497 | 0.9403 |
+| 0.95-1.00 | 366 | 0.9711 | 0.9675 | 0.9782 | 0.9818 |
 
 ### V22 mid-sophistication markets
 
-- Run at 2026-10-09 08:45 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter soph_mid, fee_rate 0.07.
+- Run at 2026-10-09 20:06 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter soph_mid, fee_rate 0.07.
 - What changed: Middle tercile.
-- Train (in-sample): Brier 0.10753 vs market 0.10871; 367 trades, P&L 23.895.
-- Test: Brier 0.09204 vs market 0.09313 (Δ CI [-0.00175, -0.00052]); 49 trades on 36 events, P&L 2.164, per trade 0.0442 (CI [-0.1086, 0.1849]), hit rate 0.592, return on cost 0.0806, top-event share of P&L 0.664.
+- Train (in-sample): Brier 0.10938 vs market 0.1104; 337 trades, P&L 22.396.
+- Test: Brier 0.09063 vs market 0.09163 (Δ CI [-0.00158, -0.00041]); 50 trades on 39 events, P&L 2.36, per trade 0.0472 (CI [-0.0836, 0.1877]), hit rate 0.58, return on cost 0.0886, top-event share of P&L 0.529.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 1674 | 0.0197 | 0.0226 | 0.023 | 0.0106 |
-| 0.05-0.10 | 512 | 0.0722 | 0.0707 | 0.0485 | 0.0653 |
-| 0.10-0.20 | 553 | 0.144 | 0.1452 | 0.1205 | 0.09 |
-| 0.20-0.30 | 300 | 0.2472 | 0.245 | 0.1785 | 0.1728 |
-| 0.30-0.40 | 211 | 0.3438 | 0.3452 | 0.3733 | 0.2911 |
-| 0.40-0.50 | 165 | 0.4511 | 0.4472 | 0.3853 | 0.4171 |
-| 0.50-0.60 | 187 | 0.5529 | 0.5489 | 0.6051 | 0.5539 |
-| 0.60-0.70 | 213 | 0.6481 | 0.646 | 0.6409 | 0.6455 |
-| 0.70-0.80 | 213 | 0.7536 | 0.7538 | 0.7595 | 0.7648 |
-| 0.80-0.90 | 262 | 0.8481 | 0.8487 | 0.8563 | 0.8684 |
-| 0.90-0.95 | 261 | 0.9263 | 0.9258 | 0.9186 | 0.9113 |
-| 0.95-1.00 | 411 | 0.973 | 0.9697 | 0.9796 | 0.994 |
+| 0.00-0.05 | 1870 | 0.0202 | 0.0229 | 0.0186 | 0.0108 |
+| 0.05-0.10 | 634 | 0.0722 | 0.0705 | 0.0548 | 0.0547 |
+| 0.10-0.20 | 638 | 0.145 | 0.145 | 0.1259 | 0.1047 |
+| 0.20-0.30 | 354 | 0.2451 | 0.2442 | 0.1946 | 0.182 |
+| 0.30-0.40 | 226 | 0.3434 | 0.3459 | 0.3658 | 0.2852 |
+| 0.40-0.50 | 191 | 0.4509 | 0.4479 | 0.3987 | 0.428 |
+| 0.50-0.60 | 209 | 0.5528 | 0.5485 | 0.6166 | 0.5602 |
+| 0.60-0.70 | 232 | 0.6477 | 0.6467 | 0.6728 | 0.6462 |
+| 0.70-0.80 | 229 | 0.7528 | 0.7534 | 0.781 | 0.7745 |
+| 0.80-0.90 | 302 | 0.8509 | 0.8487 | 0.8448 | 0.8532 |
+| 0.90-0.95 | 297 | 0.9284 | 0.9259 | 0.9054 | 0.9073 |
+| 0.95-1.00 | 415 | 0.9728 | 0.9697 | 0.9932 | 0.9954 |
 
 ### V23 high-sophistication markets
 
-- Run at 2026-10-09 08:45 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter soph_high, fee_rate 0.07.
+- Run at 2026-10-09 20:06 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter soph_high, fee_rate 0.07.
 - What changed: Top tercile.
-- Train (in-sample): Brier 0.08758 vs market 0.08918; 435 trades, P&L 3.778.
-- Test: Brier 0.08598 vs market 0.08653 (Δ CI [-0.00133, 0.00023]); 57 trades on 42 events, P&L 1.717, per trade 0.0301 (CI [-0.0936, 0.1799]), hit rate 0.526, return on cost 0.0607, top-event share of P&L 0.593.
+- Train (in-sample): Brier 0.08755 vs market 0.08901; 414 trades, P&L 0.597.
+- Test: Brier 0.08493 vs market 0.08526 (Δ CI [-0.00105, 0.00037]); 60 trades on 45 events, P&L 1.444, per trade 0.0241 (CI [-0.1137, 0.1581]), hit rate 0.5, return on cost 0.0506, top-event share of P&L 0.747.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 1250 | 0.0189 | 0.0216 | 0.0121 | 0.0053 |
-| 0.05-0.10 | 394 | 0.0727 | 0.0684 | 0.0882 | 0.0675 |
-| 0.10-0.20 | 396 | 0.1466 | 0.141 | 0.1563 | 0.1213 |
-| 0.20-0.30 | 229 | 0.2442 | 0.2435 | 0.237 | 0.2491 |
-| 0.30-0.40 | 165 | 0.3479 | 0.3442 | 0.409 | 0.3185 |
-| 0.40-0.50 | 175 | 0.4509 | 0.4469 | 0.467 | 0.433 |
-| 0.50-0.60 | 155 | 0.5527 | 0.5503 | 0.5629 | 0.574 |
-| 0.60-0.70 | 185 | 0.6489 | 0.6487 | 0.7264 | 0.6963 |
-| 0.70-0.80 | 204 | 0.7518 | 0.7508 | 0.7459 | 0.7946 |
-| 0.80-0.90 | 274 | 0.8541 | 0.8492 | 0.8243 | 0.8216 |
-| 0.90-0.95 | 217 | 0.9291 | 0.9258 | 0.9222 | 0.9385 |
-| 0.95-1.00 | 399 | 0.9767 | 0.9731 | 0.9605 | 0.9571 |
+| 0.00-0.05 | 1410 | 0.0193 | 0.0218 | 0.0114 | 0.0063 |
+| 0.05-0.10 | 485 | 0.0729 | 0.068 | 0.0755 | 0.0631 |
+| 0.10-0.20 | 442 | 0.1459 | 0.1406 | 0.1521 | 0.1114 |
+| 0.20-0.30 | 275 | 0.2452 | 0.2466 | 0.2456 | 0.2585 |
+| 0.30-0.40 | 190 | 0.3459 | 0.3445 | 0.4209 | 0.3287 |
+| 0.40-0.50 | 197 | 0.4477 | 0.4452 | 0.458 | 0.4322 |
+| 0.50-0.60 | 184 | 0.5522 | 0.5505 | 0.5603 | 0.5568 |
+| 0.60-0.70 | 199 | 0.6477 | 0.6473 | 0.7319 | 0.6998 |
+| 0.70-0.80 | 246 | 0.7499 | 0.7507 | 0.7635 | 0.7953 |
+| 0.80-0.90 | 300 | 0.8541 | 0.8494 | 0.8241 | 0.8248 |
+| 0.90-0.95 | 249 | 0.9291 | 0.9259 | 0.9247 | 0.9275 |
+| 0.95-1.00 | 445 | 0.9762 | 0.9731 | 0.9638 | 0.9631 |
 
 ### V24 zero-fee counterfactual
 
-- Run at 2026-10-09 08:45 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.0.
+- Run at 2026-10-09 20:06 UTC. Config: estimator `old_plan` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.0.
 - What changed: Not tradeable; shows how much of the result the fee decides.
-- Train (in-sample): Brier 0.10369 vs market 0.10497; 766 trades, P&L 19.54.
-- Test: Brier 0.08957 vs market 0.09047 (Δ CI [-0.00147, -0.00034]); 115 trades on 84 events, P&L 5.26, per trade 0.0457 (CI [-0.0481, 0.1411]), hit rate 0.557, return on cost 0.0895, top-event share of P&L 0.39.
+- Train (in-sample): Brier 0.1065 vs market 0.10761; 688 trades, P&L 18.71.
+- Test: Brier 0.08733 vs market 0.08813 (Δ CI [-0.00128, -0.00025]); 122 trades on 86 events, P&L 4.4, per trade 0.0361 (CI [-0.0567, 0.1253]), hit rate 0.533, return on cost 0.0726, top-event share of P&L 0.466.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5058 | 0.0196 | 0.0228 | 0.0143 | 0.0084 |
-| 0.05-0.10 | 1244 | 0.0723 | 0.0694 | 0.0645 | 0.0547 |
-| 0.10-0.20 | 1405 | 0.1435 | 0.1435 | 0.1311 | 0.1078 |
-| 0.20-0.30 | 727 | 0.2481 | 0.2425 | 0.2315 | 0.1921 |
-| 0.30-0.40 | 552 | 0.3486 | 0.3443 | 0.358 | 0.33 |
-| 0.40-0.50 | 539 | 0.4537 | 0.4509 | 0.4257 | 0.3985 |
-| 0.50-0.60 | 470 | 0.5487 | 0.5443 | 0.5867 | 0.5513 |
-| 0.60-0.70 | 569 | 0.6495 | 0.6479 | 0.6995 | 0.6759 |
-| 0.70-0.80 | 571 | 0.7525 | 0.751 | 0.749 | 0.7784 |
-| 0.80-0.90 | 771 | 0.8507 | 0.8502 | 0.8645 | 0.8727 |
-| 0.90-0.95 | 666 | 0.9265 | 0.9258 | 0.9275 | 0.9263 |
-| 0.95-1.00 | 1176 | 0.9743 | 0.9707 | 0.9696 | 0.977 |
+| 0.00-0.05 | 5739 | 0.0201 | 0.0229 | 0.013 | 0.009 |
+| 0.05-0.10 | 1522 | 0.0723 | 0.0691 | 0.0629 | 0.0489 |
+| 0.10-0.20 | 1573 | 0.1447 | 0.1433 | 0.1283 | 0.109 |
+| 0.20-0.30 | 859 | 0.2472 | 0.2432 | 0.2427 | 0.2037 |
+| 0.30-0.40 | 609 | 0.3477 | 0.3445 | 0.3546 | 0.3227 |
+| 0.40-0.50 | 629 | 0.4519 | 0.4512 | 0.4204 | 0.3927 |
+| 0.50-0.60 | 539 | 0.5496 | 0.5436 | 0.5942 | 0.5506 |
+| 0.60-0.70 | 607 | 0.6487 | 0.6476 | 0.728 | 0.6779 |
+| 0.70-0.80 | 650 | 0.7527 | 0.7513 | 0.7718 | 0.7904 |
+| 0.80-0.90 | 860 | 0.8531 | 0.8502 | 0.8661 | 0.8714 |
+| 0.90-0.95 | 785 | 0.928 | 0.9255 | 0.9267 | 0.9241 |
+| 0.95-1.00 | 1226 | 0.9743 | 0.971 | 0.9786 | 0.9805 |
 
 ### V25 knowledge-file prior
 
-- Run at 2026-10-09 08:47 UTC. Config: estimator `kg_prior` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
+- Run at 2026-10-09 20:08 UTC. Config: estimator `kg_prior` , min_edge 0.05, max_spread 0.1, price 0.03–0.97, execution taker, sides both, edge_space prob, filter None, fee_rate 0.07.
 - What changed: Adds the best retrieved base-rate line (as_of < T) as a logit feature: does the knowledge layer earn its place?
-- Train (in-sample): Brier 0.10478 vs market 0.10497; 7 trades, P&L -1.344.
-- Test: Brier 0.09011 vs market 0.09047 (Δ CI [-0.00064, -3e-05]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
+- Train (in-sample): Brier 0.10744 vs market 0.10761; 0 trades, P&L 0.0.
+- Test: Brier 0.08787 vs market 0.08813 (Δ CI [-0.00052, 2e-05]); 0 trades on 0 events, P&L 0.0, per trade None (CI None), hit rate None, return on cost None, top-event share of P&L None.
 
 | bucket | n | model pred | market pred | realized (model bucket) | realized (market bucket) |
 |---|---|---|---|---|---|
-| 0.00-0.05 | 5016 | 0.0203 | 0.0228 | 0.0128 | 0.0084 |
-| 0.05-0.10 | 1225 | 0.073 | 0.0694 | 0.0637 | 0.0547 |
-| 0.10-0.20 | 1423 | 0.1436 | 0.1435 | 0.1403 | 0.1078 |
-| 0.20-0.30 | 756 | 0.247 | 0.2425 | 0.203 | 0.1921 |
-| 0.30-0.40 | 527 | 0.3497 | 0.3443 | 0.3589 | 0.33 |
-| 0.40-0.50 | 534 | 0.4511 | 0.4509 | 0.4397 | 0.3985 |
-| 0.50-0.60 | 524 | 0.5495 | 0.5443 | 0.5607 | 0.5513 |
-| 0.60-0.70 | 547 | 0.6495 | 0.6479 | 0.6736 | 0.6759 |
-| 0.70-0.80 | 575 | 0.7524 | 0.751 | 0.7736 | 0.7784 |
-| 0.80-0.90 | 778 | 0.851 | 0.8502 | 0.8677 | 0.8727 |
-| 0.90-0.95 | 665 | 0.9266 | 0.9258 | 0.9268 | 0.9263 |
-| 0.95-1.00 | 1178 | 0.9738 | 0.9707 | 0.9697 | 0.977 |
+| 0.00-0.05 | 5649 | 0.0203 | 0.0229 | 0.0112 | 0.009 |
+| 0.05-0.10 | 1551 | 0.0715 | 0.0691 | 0.0624 | 0.0489 |
+| 0.10-0.20 | 1609 | 0.1449 | 0.1433 | 0.1395 | 0.109 |
+| 0.20-0.30 | 849 | 0.2451 | 0.2432 | 0.2043 | 0.2037 |
+| 0.30-0.40 | 604 | 0.3478 | 0.3445 | 0.3687 | 0.3227 |
+| 0.40-0.50 | 624 | 0.4521 | 0.4512 | 0.4337 | 0.3927 |
+| 0.50-0.60 | 564 | 0.5479 | 0.5436 | 0.5708 | 0.5506 |
+| 0.60-0.70 | 645 | 0.6496 | 0.6476 | 0.7004 | 0.6779 |
+| 0.70-0.80 | 636 | 0.7556 | 0.7513 | 0.7758 | 0.7904 |
+| 0.80-0.90 | 866 | 0.853 | 0.8502 | 0.8716 | 0.8714 |
+| 0.90-0.95 | 781 | 0.9289 | 0.9255 | 0.9232 | 0.9241 |
+| 0.95-1.00 | 1220 | 0.974 | 0.971 | 0.9807 | 0.9805 |
 

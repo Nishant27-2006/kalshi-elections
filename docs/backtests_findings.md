@@ -1,4 +1,17 @@
-## Findings (written 2026-10-09 after the 26 runs; numbers are from the table above)
+## Findings (updated 2026-10-09 after the full-data rerun; the table above is the full-data run)
+
+**Full-data rerun.** The first pass used 18,290 of 19,488 markets, because the candle fetch was stopped for low
+memory. After the fetch completed, all 26 configs were re-scored on the full set (cutoff 2026-06-19, 10,754 train /
+4,231 test markets). Both passes are in `docs/backtest_runs.jsonl`. Changes from the first pass:
+- **B0:** skill +1.00% → **+0.91%**, CI still excludes zero. P&L +$3.16 → **+$3.12** (90 trades, CI [−8.1c, +15.3c]).
+- **V18 (tight books):** +$6.86 → **+$6.25** (60 trades, CI [−2.8c, +23.8c]). Still the best, still not significant.
+- **V11 (min_edge 2c):** turned negative (−$1.28 on 283 trades). **V12 (min_edge 10c)** now makes no trades.
+- **V20 (maker):** −$22.24 → **−$15.04** on 930 fills; still the worst.
+- **V25 (knowledge prior):** +0.30% skill, CI now touches zero.
+- **Sophistication:** the composite terciles now show a monotone skill gradient (low +1.25%, mid +1.10%, high
+  +0.39%). See docs/participants.md.
+
+Numbers in points 1–6 below are from the first pass; the direction of every finding is unchanged on full data.
 
 **Against the success criterion, "better calibrated than the market price, after fees":** calibration is better,
 by a small amount that clears the bootstrap. Profit after fees is **not** established; no configuration's P&L CI

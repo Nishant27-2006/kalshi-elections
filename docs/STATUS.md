@@ -72,9 +72,10 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
 
 - Knowledge coverage extended 2026-10-09: 90 notes (+19: remaining Senate/governor seats, PA-07/PA-08/WA-03, Trump-admin
   actions/tenure/travel/personnel, McConnell/Walz, Nobel, Abraham Accords, Taiwan advisory, CA Prop 40, Citrini).
-- Re-test V18 — BLOCKED until post-2026-10-09 settlements accumulate (bulk after Nov 3).
+- Re-test V18 and the low-efficiency lead — BLOCKED until post-2026-10-09 settlements accumulate (bulk after Nov 3).
 
 - Re-test V18 (tight books only) on data that did not exist when it was chosen (post-2026-10-09 settlements).
+- ~~Analog favorability fill-in~~ done: +25 races; no change to validation; PA-type 'popular D' pattern −0.8 (n.s.).
 - ~~Fresh retrieval eval set~~ done 2026-10-09: v2 recall@5 1.000 (0.933 on existing topics before new notes); see docs/retrieval.md.
 - ~~Finish the remaining candle fetches~~ done: 19,488/19,488; suite re-scored on full data.
 - LLM judgment step over retrieved chunks: untested (no ANTHROPIC_API_KEY), and the only path by which the
@@ -87,5 +88,5 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
 | 0 | Paper reviews (5 PDFs → `docs/papers/`) | done |
 | 1 | Knowledge files | done — 71 notes in `knowledge/politics/` (≈1,500 dated+sourced claims), `knowledge/markets/how-prediction-markets-work.md` |
 | 2 | Retrieval + eval | done — BM25 + as-of filter; 74 markets / 78 pairs; recall@5 0.953 (R0) → 0.993 (R5, eval-tuned). `docs/retrieval.md` |
-| 3 | Backtests | done — 26 logged runs (B0 + 25 one-change variations) on a locked 30% test set; B0 beats market Brier (+1.0% skill, CI excludes 0); no P&L CI above 0. `docs/backtests.md` |
-| 4 | Market mechanics + participant models | done — `knowledge/markets/how-prediction-markets-work.md`; liquidity/efficiency/activity submodels; edge does NOT concentrate in low-sophistication markets; trade size uncorrelated with sophistication. `docs/participants.md` |
+| 3 | Backtests | done — 26 logged runs (B0 + 25 one-change variations) on a locked 30% test set; B0 beats market Brier (+0.91% skill on full data, CI excludes 0); no P&L CI above 0. `docs/backtests.md` |
+| 4 | Market mechanics + participant models | done — `knowledge/markets/how-prediction-markets-work.md`; liquidity/efficiency/activity submodels; on full data, forecast skill leans toward less-sophisticated books (+1.25/+1.10/+0.39%), P&L mostly does not (one lead: low-efficiency tercile, 14 trades); score fails train validation; trade size uncorrelated. `docs/participants.md` |
