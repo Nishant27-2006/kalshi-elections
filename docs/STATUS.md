@@ -66,6 +66,6 @@ No file is literally named old-plan.md. Two documents together are the plan this
 |---|---|---|
 | 0 | Paper reviews (5 PDFs → `docs/papers/`) | done |
 | 1 | Knowledge files | done — 71 notes in `knowledge/politics/` (≈1,500 dated+sourced claims), `knowledge/markets/how-prediction-markets-work.md` |
-| 2 | Retrieval + eval | not started |
+| 2 | Retrieval + eval | done — BM25 + as-of filter; 74 markets / 78 pairs; recall@5 0.953 (R0) → 0.993 (R5, eval-tuned). `docs/retrieval.md` |
 | 3 | Backtests | not started |
 | 4 | Market mechanics + participant models | not started |
