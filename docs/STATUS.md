@@ -60,6 +60,14 @@ No file is literally named old-plan.md. Two documents together are the plan this
 - Known data issues flagged by agents: SENATELA-26-R rules say "Senator of Kentucky" (Kalshi template typo);
   NE Senate D contract still names a withdrawn candidate; GOVPARTYMI-26 still lists Duggan.
 
+## Race-analog engine (operator request, 2026-10-09)
+
+`forecast/analogs.py` + `knowledge/politics/data/races_*.csv` (218 races, 2016–2026); results in
+`docs/analogs.md`. In walk-forward tests, literal analogs beat no adjustment by a small margin (MAE 3.05 vs 3.26,
+CI clears 0); the mirrored version does not. The dominant pattern is cycle-level: polls overstated
+Democrats in all three Trump-on-ballot years but not in the 2018/2022 midterms. The most robust race-level
+pattern, that polls understate a state's partisan lean, is already priced by Kalshi.
+
 ## Workstream status
 
 | # | Workstream | Status |
