@@ -111,6 +111,45 @@ is above zero.
 - 26 configurations were scored on one test set. The Brier "wins" are many near-copies of the same recalibration
   idea, not independent confirmations.
 
+## Walk-forward re-test of the leads (earlier periods only; locked test set untouched)
+
+`python -m forecast.walkforward`. Train events (before the 2026-06-19 outer cutoff) are cut into 5 blocks by close; fold i fits on blocks 1..i and scores block i+1 (snapshots after the last fitting event closed). These periods played no part in picking the leads.
+
+| fold | scored from | strategy | markets | Brier skill | ΔBrier CI95 | trades | P&L $ | P&L/trade | P&L/trade CI95 |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 2025-01-03 | B0 old plan Stage A | 1363 | -0.0590 | [0.00293, 0.01202] | 342 | -20.879 | -0.061 | [-0.126, 0.0124] |
+| 1 | 2025-01-03 | V18 tight books only (spread<=4c) | 935 | -0.0365 | [-0.0011, 0.0085] | 240 | -2.612 | -0.0109 | [-0.0753, 0.0628] |
+| 1 | 2025-01-03 | L1 low-efficiency tercile | 747 | -0.0673 | [0.00259, 0.01425] | 181 | -9.072 | -0.0501 | [-0.1333, 0.0417] |
+| 2 | 2025-06-05 | B0 old plan Stage A | 1704 | +0.0038 | [-0.00328, 0.00252] | 111 | 6.246 | 0.0563 | [-0.12, 0.222] |
+| 2 | 2025-06-05 | V18 tight books only (spread<=4c) | 1006 | +0.0006 | [-0.00339, 0.00394] | 75 | 7.255 | 0.0967 | [-0.1367, 0.3095] |
+| 2 | 2025-06-05 | L1 low-efficiency tercile | 975 | +0.0034 | [-0.00404, 0.00332] | 75 | 9.863 | 0.1315 | [-0.1089, 0.3238] |
+| 3 | 2026-01-01 | B0 old plan Stage A | 1345 | +0.0166 | [-0.00385, 0.00016] | 111 | 10.34 | 0.0932 | [-0.0338, 0.1994] |
+| 3 | 2026-01-01 | V18 tight books only (spread<=4c) | 1000 | +0.0176 | [-0.00377, 0.00034] | 95 | 8.068 | 0.0849 | [-0.0253, 0.1757] |
+| 3 | 2026-01-01 | L1 low-efficiency tercile | 561 | +0.0322 | [-0.00683, -0.00087] | 40 | 8.674 | 0.2168 | [0.0804, 0.3433] |
+| 4 | 2026-04-12 | B0 old plan Stage A | 2347 | +0.0126 | [-0.00169, -0.0002] | 69 | 16.777 | 0.2432 | [0.1153, 0.3606] |
+| 4 | 2026-04-12 | V18 tight books only (spread<=4c) | 1964 | +0.0124 | [-0.00165, -1e-05] | 56 | 13.236 | 0.2364 | [0.0883, 0.3639] |
+| 4 | 2026-04-12 | L1 low-efficiency tercile | 1267 | +0.0152 | [-0.00235, -0.00023] | 31 | 9.745 | 0.3143 | [0.1748, 0.441] |
+
+Totals across the 4 folds: B0 old plan Stage A: $+12.48 on 633 trades; V18 tight books only (spread<=4c): $+25.95 on 466 trades; L1 low-efficiency tercile: $+19.21 on 327 trades.
+
+**Reading.**
+- **The leads depend on the period.** In fold 1 (fit on 2021–2024, scored from 2025-01-03) every strategy is *worse* than the market: B0 skill −5.9%, with a CI excluding zero in the wrong direction, and −$20.88 on 342 trades. Low-efficiency and tight books lose too.
+- **Folds 3–4 (2026) are positive.** In fold 4 all three strategies have P&L CIs above zero, and low-efficiency is also above zero in fold 3.
+- **Likely cause.** A model fit on the thin 2021–24 political book does not transfer to the 2025 explosion in listings. Once 2025 data is in the fit, the recalibration works and makes money in the folds after it.
+- **What this means.** The edge is recent and depends on refitting. It is not established as stable. The held-out test (cutoff 2026-06-19) continues the positive 2026 pattern but with CIs spanning zero.
+- **Low-efficiency tercile:** the most consistent of the three in 2026 (CI > 0 in folds 3 and 4), but negative in fold 1. Keep it as the lead to re-test first on post-2026-10-09 settlements.
+
+## Multiple-comparisons correction (details: docs/multiple_testing.md)
+
+Holm and Benjamini–Hochberg, applied separately to the 37 Brier tests and the 31 P&L tests (26 held-out runs plus
+the 12 tercile cuts; p-values approximated from the bootstrap CIs):
+- **Brier:** 7 of 37 survive Holm and 30 survive BH. Survivors under Holm include recency (V10), global Platt (V02),
+  the paper's fixed coefficients (V05), reversion (V07) and sum-to-one (V09). **B0 survives BH but not Holm**
+  (Holm-adjusted p = 0.07). Forecasting better than the raw price by recalibrating it is a robust result.
+- **P&L: 0 of 31 survive either correction.** The low-efficiency tercile (raw p ≈ 0.036) adjusts to Holm 1.0 /
+  BH 0.82. **No profit claim survives correction for the number of looks.**
+- V22 and the composite-mid tercile are the same test counted twice, which makes the correction slightly conservative.
+
 ## Runs
 
 ### B0 old plan Stage A

@@ -72,7 +72,9 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
 
 - Knowledge coverage extended 2026-10-09: 90 notes (+19: remaining Senate/governor seats, PA-07/PA-08/WA-03, Trump-admin
   actions/tenure/travel/personnel, McConnell/Walz, Nobel, Abraham Accords, Taiwan advisory, CA Prop 40, Citrini).
-- Re-test V18 and the low-efficiency lead — BLOCKED until post-2026-10-09 settlements accumulate (bulk after Nov 3).
+- ~~Walk-forward re-test of leads~~ done: period-dependent (fold 1, 2025H1: all lose; 2026 folds: positive). docs/backtests.md.
+- ~~Multiple-comparisons correction~~ done: Brier gains survive (Holm 7/37, BH 30/37); 0/31 P&L tests survive. docs/multiple_testing.md.
+- Re-test V18 and the low-efficiency lead on new settlements — BLOCKED until post-2026-10-09 settlements accumulate (bulk after Nov 3).
 
 - Re-test V18 (tight books only) on data that did not exist when it was chosen (post-2026-10-09 settlements).
 - ~~Analog favorability fill-in~~ done: +25 races; no change to validation; PA-type 'popular D' pattern −0.8 (n.s.).

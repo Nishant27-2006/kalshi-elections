@@ -214,7 +214,17 @@ def _soph(level):
     return f
 
 
-FILTERS = {"liquid": _liquid, "mature": _mature,
+def _sub_low(name):
+    """Bottom tercile of ONE sophistication submodel; cut points from train."""
+    def f(df, train):
+        from forecast.participants import Sophistication
+        s = Sophistication().fit(train)
+        cut = np.nanpercentile(s.submodels(train)[name], 100 / 3)
+        return df[(s.submodels(df)[name] <= cut).to_numpy()]
+    return f
+
+
+FILTERS = {"liquid": _liquid, "eff_low": _sub_low("efficiency"), "mature": _mature,
            "soph_low": _soph("low"), "soph_mid": _soph("mid"), "soph_high": _soph("high")}
 
 
