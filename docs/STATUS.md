@@ -70,9 +70,13 @@ pattern, that polls understate a state's partisan lean, is already priced by Kal
 
 ## Next (not done)
 
+- Knowledge coverage extended 2026-10-09: 90 notes (+19: remaining Senate/governor seats, PA-07/PA-08/WA-03, Trump-admin
+  actions/tenure/travel/personnel, McConnell/Walz, Nobel, Abraham Accords, Taiwan advisory, CA Prop 40, Citrini).
+- Re-test V18 — BLOCKED until post-2026-10-09 settlements accumulate (bulk after Nov 3).
+
 - Re-test V18 (tight books only) on data that did not exist when it was chosen (post-2026-10-09 settlements).
-- Fresh retrieval eval set (R5 was tuned on the current one).
-- Finish the remaining 1,198 candle fetches when memory allows (`python -m forecast.kalshi_data candles` resumes).
+- ~~Fresh retrieval eval set~~ done 2026-10-09: v2 recall@5 1.000 (0.933 on existing topics before new notes); see docs/retrieval.md.
+- ~~Finish the remaining candle fetches~~ done: 19,488/19,488; suite re-scored on full data.
 - LLM judgment step over retrieved chunks: untested (no ANTHROPIC_API_KEY), and the only path by which the
   knowledge layer could still beat plain recalibration.
 

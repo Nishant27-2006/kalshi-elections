@@ -10,6 +10,7 @@ created: 2026-10-09
 as_of: 2026-10-09
 markets:
   - SENATEAK-26
+  - KXAKSENATE-26NOV03
 ---
 
 # Race: 2026 Alaska Senate

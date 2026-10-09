@@ -11,6 +11,7 @@ as_of: 2026-10-09
 markets:
   - SENATEMI-26
   - KXMISENATE-26
+  - KXMIDTERMMOV-MISEND
 ---
 
 # Race: 2026 Michigan Senate
@@ -48,6 +49,7 @@ Open Democratic-held seat (Gary Peters retiring): Democrat Abdul El-Sayed vs Rep
 - SENATEMI-26 rules: "If a representative of the Republican [Democratic] party is sworn in as a Senator of Michigan for the term beginning in 2027, then the market resolves to Yes." (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/SENATEMI-26?with_nested_markets=true)
 - KXMISENATE-26 is a person market: "If Abdul El-Sayed wins the 2026 Michigan Senate race, then the market resolves to Yes." The listed candidate must win as the nominee of the listed party; a candidate who fails to get the nomination resolves No. McMorrow and Stevens markets are still listed at about 0.01. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMISENATE-26?with_nested_markets=true)
 - Both events can resolve early once a consensus of media organizations projects the winner. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMISENATE-26?with_nested_markets=true)
+- KXMIDTERMMOV-MISEND is a margin ladder: "If the Democratic Party wins the 2026 U.S. Senate election in Michigan by N percentage points or more, then the market resolves to Yes," with strikes from 1 to 15 in steps of 2. Margin is the Democrat's share minus the runner-up's, with no rounding and the lower bound inclusive. A Democratic loss gives a negative margin, so every strike resolves No. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMIDTERMMOV-MISEND?with_nested_markets=true)
 
 ## Related
 

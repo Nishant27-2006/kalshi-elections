@@ -11,6 +11,8 @@ as_of: 2026-10-09
 markets:
   - SENATEME-26
   - KXMESENATEPERSON-26
+  - KXMESENOUTCOME-27JAN
+  - KXMETXCOMBO-26NOV
 ---
 
 # Race: 2026 Maine Senate
@@ -48,6 +50,8 @@ Sen. Susan Collins (R) seeks a sixth term against replacement Democratic nominee
 - SENATEME-26 rules: "If a representative of the Republican [Democratic] party is sworn in as a Senator of Maine for the term beginning in 2027, then the market resolves to Yes." It can resolve early on a media consensus projection. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/SENATEME-26?with_nested_markets=true)
 - KXMESENATEPERSON-26 rules: "If Troy Jackson wins the 2026 Maine Senate election, then the market resolves to Yes." It can resolve early on a media consensus projection. Expected expiration is 2026-11-03 and close is 2027-07-07. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMESENATEPERSON-26?with_nested_markets=true)
 - The person event still lists Graham Platner, Janet Mills and other non-nominees at about 0.001. The race is decided under RCV, so a projection may wait on later tabulation rounds if no one passes 50% in the first round. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMESENATEPERSON-26?with_nested_markets=true)
+- KXMESENOUTCOME-27JAN rules name Platner: GPD needs "Dem Nominee: Graham Platner, General Election Winner: Democrat" and GPR needs Platner plus a Republican winner. Legs settle under the SENATEPARTYNOM / SENATEPARTY rulesets, and if any leg fails the contract resolves No. Even so, on Oct 9 GPD traded at 0.54/0.58 and GPR at 0.39/0.44, close to the party market, so check the full rules for how the nominee leg is being treated. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMESENOUTCOME-27JAN?with_nested_markets=true)
+- KXMETXCOMBO-26NOV is a two-race person combo. For example, TAL-COL needs "Texas Senate: James Talarico wins, Maine Senate: Susan Collins wins." The original series lists Platner legs, and the KXMETXCOMBO-26NOVB markets carry Troy Jackson legs. Settlement uses the TX and ME Secretaries of State. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMETXCOMBO-26NOV?with_nested_markets=true)
 
 ## Related
 

@@ -10,6 +10,10 @@ created: 2026-10-09
 as_of: 2026-10-09
 markets:
   - SENATETX-26
+  - KXMIDTERMMOV-TXSENR
+  - KXMIDTERMMOV-TXSEND
+  - KXTXSENOUTCOME-27JAN
+  - KXMETXCOMBO-26NOV
 ---
 
 # Race: 2026 Texas Senate
@@ -49,6 +53,8 @@ Open-seat Texas Senate race (Cornyn lost renomination): Republican Ken Paxton vs
 - SENATETX-26 is a party market. "If a representative of the Republican [Democratic] party is sworn in as a Senator of Texas for the term beginning in 2027, then the market resolves to Yes." (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/SENATETX-26?with_nested_markets=true)
 - Both markets can resolve early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-04. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/SENATETX-26?with_nested_markets=true)
 - The market is about party, not person. A Libertarian win (Ted Brown) would resolve both listed sides No. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/SENATETX-26?with_nested_markets=true)
+- KXMIDTERMMOV-TXSEND / -TXSENR are margin ladders: "If the Democratic [Republican] Party wins the 2026 U.S. Senate election in Texas by N percentage points or more, then the market resolves to Yes" (D strikes 1–7, R strikes 1–13). Margin is the party's vote share minus the runner-up's, with no rounding and the lower bound inclusive. Certified results from the state election authority settle it. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXMIDTERMMOV-TXSEND?with_nested_markets=true)
+- KXTXSENOUTCOME-27JAN is a combination market: TALPAX needs "GOP Nominee: Ken Paxton, General Election Winner: Democrat" and PAXTAL needs Paxton plus a Republican winner. Each leg settles under Kalshi's SENATEPARTYNOM / SENATEPARTY rulesets, and if any leg fails the contract resolves No. KXMETXCOMBO-26NOV pairs the TX and ME Senate winners by person (Talarico/Paxton × Collins/Platner, plus Troy Jackson variants under KXMETXCOMBO-26NOVB). (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXTXSENOUTCOME-27JAN?with_nested_markets=true)
 
 ## Related
 

@@ -12,6 +12,7 @@ markets:
   - KXGREENLAND-29
   - KXGREENTERRITORY-29
   - KXSTATE51-29
+  - KXGREENLANDPRICE-29JAN21
 ---
 
 # Policy: Greenland and Territorial Expansion
@@ -42,6 +43,8 @@ Scope: dated events in the Trump administration's push to acquire Greenland, the
 - KXGREENLAND-29 needs the United States to purchase at least part of Greenland from Denmark before Jan. 20, 2029. A security or basing agreement is not a purchase. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXGREENLAND-29?with_nested_markets=true)
 - KXGREENTERRITORY-29 needs part of Greenland to come under formal U.S. governance or jurisdiction (state, territory or other U.S. classification). A joint U.S.-controlling-entity announcement that it will happen also counts. Leasing territory, such as for a military base, does not. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXGREENTERRITORY-29?with_nested_markets=true)
 - KXSTATE51-29 resolves on which place (or any part of it) becomes the 51st state before Jan. 20, 2029. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXSTATE51-29?with_nested_markets=true)
+- KXGREENLANDPRICE-29JAN21 brackets the Total Monetary Consideration of a U.S. acquisition of Greenland during Trump's term (cash, Treasury securities, payments to residents, recurring aid counted at 50x the annual amount if the term exceeds 50 years, infrastructure commitments, assumed debt), rounded to the nearest $1 billion. It excludes military protection, unquantified promises, citizenship or visa value, and resource or strategic value. If no acquisition occurs, only the "$0 / No Acquisition" bracket resolves Yes. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXGREENLANDPRICE-29JAN21?with_nested_markets=true)
+- For KXGREENLANDPRICE, an "Acquisition of Greenland" requires a sovereignty-transfer treaty, Senate ratification, a formal White House announcement of territorial status, or a Compact of Free Association with exclusive military access; expanded base rights, trade deals and occupation without a formal agreement do not count. On Oct. 9, 2026 the "$0 / No Acquisition" bracket was 0.89 bid / 0.909 ask. (as_of: 2026-10-09; source: https://api.elections.kalshi.com/trade-api/v2/events/KXGREENLANDPRICE-29JAN21?with_nested_markets=true)
 
 ## Related
 
