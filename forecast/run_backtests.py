@@ -67,6 +67,19 @@ CONFIGS = [
            notes="Not tradeable; shows how much of the result the fee decides."),
     Config(name="V25 knowledge-file prior", **{**B0, "estimator": "kg_prior"},
            notes="Adds the best retrieved base-rate line (as_of < T) as a logit feature: does the knowledge layer earn its place?"),
+    Config(name="J01 + Jev contract-text judgments", **{**B0, "estimator": "jev"},
+           notes="B0 plus Jev (TypeSafe jev-1.14.0) answers to 9 text-only questions about each contract, as intercept shifts."),
+    Config(name="J02 + Jev x price interactions", **{**B0, "estimator": "jev", "est_params": {"interactions": True}},
+           notes="J01 plus each Jev feature times logit(mid): lets contract type change the favourite-longshot slope."),
+    Config(name="J03 master: Jev + interactions + microstructure", **{**B0, "estimator": "jev",
+           "est_params": {"interactions": True, "micro": True}},
+           notes="J02 plus spread, volume, OI, age, drift, field size."),
+    Config(name="J04 master on tight books (spread<=4c)", **{**B0, "estimator": "jev",
+           "est_params": {"interactions": True, "micro": True}, "filter": "liquid"},
+           notes="J03 restricted to the V18 universe."),
+    Config(name="J05 placebo: Jev features shuffled across markets", **{**B0, "estimator": "jev",
+           "est_params": {"interactions": True, "micro": True, "placebo": True}},
+           notes="Control for J03. If this matches J03, the Jev answers carry no information."),
 ]
 
 

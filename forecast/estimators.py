@@ -290,3 +290,54 @@ class KGPrior(_Logistic):
 
 
 ESTIMATORS["kg_prior"] = KGPrior
+
+
+class JevStack(OldPlanStageA):
+    """B0 plus Jev's judgments about each contract's text (forecast/jev_questions.py).
+
+    p = sigmoid(B0 terms + sum_k c_k * jev_k [+ sum_k d_k * jev_k * logit(mid)] [+ microstructure]).
+    Jev features are centred and scaled on train. Only TEXT questions are used:
+    they ask what the contract says, not what happened. A market with no cached
+    Jev answers raises, so a partial cache can never silently mix feature sets.
+    """
+    C = 0.5
+
+    def __init__(self, interactions: bool = False, micro: bool = False, world: bool = False, C: float = 0.5,
+                 placebo: bool = False):
+        self.interactions, self.micro, self.world, self.C, self.placebo = interactions, micro, world, C, placebo
+        self.recency_days = None
+
+    def _jev(self, df):
+        if not hasattr(self, "_tab"):
+            from forecast.jev_features import feature_columns, table
+            t = table(include_world=self.world)
+            self._cols = ["jev_" + c for c in feature_columns(self.world)]
+            self._tab = t.set_index("ticker")[self._cols]
+            if self.placebo:   # control: same features, shuffled across markets
+                vals = self._tab.to_numpy()[np.random.default_rng(0).permutation(len(self._tab))]
+                self._tab = pd.DataFrame(vals, index=self._tab.index, columns=self._cols)
+        missing = set(df["ticker"]) - set(self._tab.index)
+        if missing:
+            raise RuntimeError(f"{len(missing)} markets have no Jev answers; run python -m forecast.jev_features run")
+        return self._tab.loc[df["ticker"]].to_numpy(float)
+
+    def features(self, df, fit=False):
+        base = super().features(df, fit=fit)
+        J = self._jev(df)
+        if fit:
+            self.jmu, self.jsd = np.nanmean(J, 0), np.nanstd(J, 0) + 1e-9
+        J = np.nan_to_num((J - self.jmu) / self.jsd)
+        cols = [base, J]
+        if self.interactions:
+            cols.append(J * logit(df["mid"]).reshape(-1, 1))
+        if self.micro:
+            M = np.column_stack([df["spread"].to_numpy(), np.log1p(df["vol_7d"].to_numpy()),
+                                 np.log1p(df["oi"].to_numpy()), np.log1p(df["age_days"].to_numpy()),
+                                 np.nan_to_num(df["d_mid_7d"].to_numpy()), np.log(df["event_size"].to_numpy())])
+            if fit:
+                self.mmu, self.msd = M.mean(0), M.std(0) + 1e-9
+            cols.append((M - self.mmu) / self.msd)
+        return np.column_stack(cols)
+
+
+ESTIMATORS["jev"] = JevStack
