@@ -29,6 +29,8 @@ CACHE = os.path.join(ROOT, "data_cache", "jev_features.jsonl")
 ERRORS = os.path.join(ROOT, "data_cache", "jev_errors.jsonl")
 MARKETS = os.path.join(ROOT, "data_cache", "markets.jsonl")
 CONCURRENCY = 8
+# Image inputs and Box questions are "danger zone" features (docs.typesafe.ai/images); harmless on text-only calls.
+HEADERS = {"TypeSafe-Danger-Zone-Images": "true"}
 RULES_MAX = 2500   # characters; long rules are mostly boilerplate after this
 
 # Fields that reveal how a market settled. Never sent.
@@ -113,7 +115,7 @@ async def run_async(markets: dict[str, dict], limit: int | None = None):
     q = questions()
     sem = asyncio.Semaphore(CONCURRENCY)
     ok = 0
-    async with AsyncTypeSafeClient(model=MODEL) as client:
+    async with AsyncTypeSafeClient(model=MODEL, headers=HEADERS) as client:
         with open(CACHE, "a", encoding="utf-8") as fh_ok, open(ERRORS, "a", encoding="utf-8") as fh_err:
             tasks = [_ask(client, sem, t, state_for(markets[t]), q, fh_ok, fh_err) for t in todo]
             for i, fut in enumerate(asyncio.as_completed(tasks), 1):
