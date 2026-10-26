@@ -68,6 +68,12 @@ CI clears 0); the mirrored version does not. The dominant pattern is cycle-level
 Democrats in all three Trump-on-ballot years but not in the 2018/2022 midterms. The most robust race-level
 pattern, that polls understate a state's partisan lean, is already priced by Kalshi.
 
+## Jev (TypeSafe) and spike fading (2026-10-26)
+
+- `forecast/jev_questions.py`, `jev_features.py`: Jev (jev-1.14.0) answers text-only questions about each contract; `JevStack` estimator, runs J01-J05 (J05 = shuffled-feature placebo) and `jev_contamination.py` are built and smoke-tested. **Not run: needs TYPESAFE_API_KEY in .env.**
+- `forecast/spike_fade.py` -> `docs/spike_fade.md`: selling into one-day political spikes. Taker fade loses on held-out data (S0 -3.0c/trade, CI [-6.2, -0.2]); so does following the spike (S1 -3.6c). A resting limit order at the spike close is break-even (S5 +0.7c, CI [-3.1, +4.4]). Having a knowledge-graph note dated in the prior week does not separate spikes (S8 vs S9, both CIs span zero).
+- `forecast/spike_jev.py`: Jev reads the knowledge-graph notes dated in the 7 days before a spike and judges whether they explain it; code decides fade/follow/skip and proposes the limit price. J1/J2 pre-registered, **not run (no key)**. `live` prints proposals only; nothing is sent to Kalshi.
+
 ## Next (not done)
 
 - Knowledge coverage extended 2026-10-09: 90 notes (+19: remaining Senate/governor seats, PA-07/PA-08/WA-03, Trump-admin
