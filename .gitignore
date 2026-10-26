@@ -41,3 +41,20 @@ data_cache/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# local key inventory - never commit
+config/api_keys_required.md
+state/_*
+state/scan_*.json
+state/seen.json
+state/book_recording*.jsonl
+
+state/*.jsonl
+state/_liquid.jsonstate/_entity_index.json
+
+# EQR terminal
+terminal/node_modules/
+terminal/dist/
+state/*.log
+state/*.err
+state/*.pid

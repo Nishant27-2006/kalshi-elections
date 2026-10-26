@@ -114,3 +114,53 @@ contracts is measuring survivorship.
 
 Written up in the vault as
 `Pattern: Momentum Chasing Fails on Scandal Deadline Contracts`.
+
+---
+
+## Update 2026-08-17 — re-verified against the live API
+
+**Kalshi moved to fixed-point fields.** Prices are dollar-strings under a
+`_dollars` suffix (`yes_bid_dollars` = `"0.9850"`); quantities use `_fp`
+(`volume_fp`, `open_interest_fp`). The bare `yes_bid` / `yes_ask` / `volume`
+keys are gone and read as `None`. Candlesticks nest the same way
+(`price.close_dollars`). Ref: `docs.kalshi.com/getting_started/fixed_point_migration`.
+
+Fixed here: `agent/market_lookup.py` (was leaning on its orderbook fallback to
+recover quotes, and hardcoded `last_price_cents`/`volume_recent` to 0.0 — both
+now read real fields), `fetch_political_markets.py` (printed `yes_bid=None`),
+`find_momentum.py` (record fields only). `backtest.py` and `find_momentum.py`'s
+*candle* parsing were already correct and needed no change.
+
+Base URL: prod is now `external-api.kalshi.com`; the `api.elections.kalshi.com`
+host this repo shipped with is still supported for compatibility, not broken.
+
+**`find_momentum.py` is slow, not dead.** `discover_candidate_series()` returns
+**575 series**, scanned sequentially with a candlestick call per market. It needs
+many minutes. Run it with `python -u` or buffered stdout will make a killed run
+look like a silent one.
+
+### Backtest re-run on a live universe
+
+The hardcoded `UNIVERSE` has decayed — 5 of its 12 tickers now return 0–2
+candles (resolved/expired), leaving n=4 entries. Rebuilt instead on the **41
+contested, liquid FL-primary markets** (ask 4–96c, volume >=5000) that settle
+on the 2026-08-18 Florida primary, 7d hourly candles, same `simulate()` and
+same risk gate:
+
+| Trigger | n | 1h win | 1h median | 4h win | 4h median |
+|---|---|---|---|---|---|
+| >=3c | 123 | 8.9% | -$0.64 | 10.3% | -$0.84 |
+| >=5c | 89 | 9.0% | -$0.78 | 8.1% | -$1.09 |
+| >=8c | 74 | 10.8% | -$1.06 | 9.7% | -$1.15 |
+| >=10c | 67 | 10.4% | -$1.20 | 6.1% | -$1.75 |
+
+Momentum chasing lost money at **every** trigger, and the median got *worse* as
+the trigger rose — the same mean-reversion signature as the original run, on
+2.3x the sample and on the exact markets that resolve tomorrow. Note the
+win rates are harsher than the original 26–40% partly because a crowded primary
+field is mostly longshot contracts decaying toward zero and the sim charges a
+flat 2c spread on each; treat the direction as the finding, not the magnitude.
+
+**No arbitrage exists in this universe.** Across all 41 FL primary events, the
+sum of best asks was >=101c everywhere. The single event with bids summing over
+100 (FL-23 D, 100.4c) is **-4.6c after Kalshi's `0.07*C*P*(1-P)` fee**.

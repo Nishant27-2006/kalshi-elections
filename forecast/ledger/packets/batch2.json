@@ -1,0 +1,978 @@
+[
+ {
+  "ticker": "CONTROLH-2028-R",
+  "event": "CONTROLH-2028",
+  "title": "Will the Republican party win the House in 2028?",
+  "event_title": "2028 House winner",
+  "rules": "If the Republican party has won control of the House in 2028, then the market resolves to Yes.",
+  "bid": 0.27,
+  "ask": 0.28,
+  "mid": 0.275,
+  "close_time": "2029-02-01T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/chamber-2026-house-control.md",
+    "as_of": "2026-10-09",
+    "text": "Kalshi CONTROLH-2026: Democratic Party Yes at 0.90 bid / 0.901 ask, Republican Party Yes at 0.099 / 0.10.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/CONTROLH-2026?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-house-control.md",
+    "as_of": "2026-10-09",
+    "text": "CONTROLH-2026 resolves Yes for the Democratic market if Democrats win control of the House in 2026. It can resolve early on a consensus of media calls. Otherwise it settles on the party of the Speaker of the House on Feb 1, 2027.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/CONTROLH-2026?with_nested_markets=true"
+   },
+   {
+    "file": "markets/how-prediction-markets-work.md",
+    "as_of": "2026-10-09",
+    "text": "CONTROLH-2026 `rules_secondary` reads: \"This market may be determined early based on a consensus of media calls projecting control of the U.S. House... Otherwise, victory will be determined by the party identification of the Speaker of the House on February 1, 2027.\"",
+    "source": "GET https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=CONTROLH&status=open"
+   },
+   {
+    "file": "politics/cycle-2024-general-results.md",
+    "as_of": "2024-11-13",
+    "text": "Call: AP projects Republican House majority https://abcnews.go.com/US/wireStory/republicans-win-218-us-house-seats-claiming-majority-115846823",
+    "source": ""
+   },
+   {
+    "file": "politics/mechanics-political-settlement.md",
+    "as_of": "2026-10-09",
+    "text": "CONTROLH-2026 and CONTROLS-2026 `rules_secondary` say the market \"may be determined early based on a consensus of media calls projecting control\". Otherwise it is decided by the party of the Speaker (House) or the President pro tempore (Senate) on February 1, 2027.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/CONTROLH-2026?with_nested_markets=true"
+   },
+   {
+    "file": "politics/cycle-2024-general-results.md",
+    "as_of": "2025-02-01",
+    "text": "CONTROLH-2024-R (\"If Republicans have won control of the House in 2024\u2026\") and CONTROLS-2024-R closed at 2025-02-01T15:00Z with result yes.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/historical/markets?event_ticker=CONTROLH-2024"
+   },
+   {
+    "file": "politics/mechanics-political-settlement.md",
+    "as_of": "2026-10-09",
+    "text": "KXHOUSEPOPVOTEMARGIN-27NOV03 settles on the Clerk of the House election statistics. Its bucket ranges include the lower bound and exclude the upper bound, with \"No rounding\". The latest expiration is 2028-02-01.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXHOUSEPOPVOTEMARGIN-27NOV03?with_nested_markets=true"
+   },
+   {
+    "file": "politics/nomination-2028-general.md",
+    "as_of": "2026-10-09",
+    "text": "Nomination: 2028 General Election Nomination: 2028 General Election politics nomination president general-election Scope: the 2028 presidential winner (by person and by party), control of the Presidency, House, and Senate together, and the nominee-matchup markets, plus general-election polling and the national environment.",
+    "source": ""
+   }
+  ]
+ },
+ {
+  "ticker": "GOVPARTYFL-26-D",
+  "event": "GOVPARTYFL-26",
+  "title": "Will the Democratic party win the governorship in Florida",
+  "event_title": "Florida Governor winner?",
+  "rules": "If a representative of the Democratic party is inaugurated as the governor of Florida pursuant to the 2026 election, then the market resolves to Yes.",
+  "bid": 0.23,
+  "ask": 0.24,
+  "mid": 0.235,
+  "close_time": "2027-11-03T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/race-2026-governor-florida.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYFL-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Florida pursuant to the 2026 election, then the market resolves to Yes.\" The -R contract is the same with Republican. It settles on the party of the person inaugurated, not on the named candidate.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYFL-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-florida.md",
+    "as_of": "2026-08-18",
+    "text": "Incumbent Ron DeSantis (R) is term-limited; the general election is November 3, 2026 and party primaries were held August 18, 2026.",
+    "source": "https://en.wikipedia.org/wiki/2026_Florida_gubernatorial_election"
+   },
+   {
+    "file": "politics/race-2026-senate-fl.md",
+    "as_of": "2026-10-09",
+    "text": "Rules text: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Florida for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEFLS-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/cycle-2026-primaries-results.md",
+    "as_of": "2026-08-18",
+    "text": "Result: FL primaries, Donalds (R) and Jolly (D) nominated https://en.wikipedia.org/wiki/2026_Florida_gubernatorial_election",
+    "source": ""
+   },
+   {
+    "file": "politics/race-2026-governor-nevada.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNV-26-D resolves Yes \"If a representative of the Democratic party is inaugurated as the governor of Nevada pursuant to the 2026 election\"; -R mirrors it. An independent winner (e.g. Danielle Ford) would resolve both No.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNV-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-oregon.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYOR-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Oregon pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-09.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYOR-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-vermont.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYVT-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Vermont pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-05.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYVT-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2028-governor-new-hampshire.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNH-28-D: \"If a representative of the Democratic party is inaugurated as the governor of New Hampshire pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. The event subtitle reads \"In 2026\".",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNH-28?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "GOVPARTYOH-26-R",
+  "event": "GOVPARTYOH-26",
+  "title": "Will the Republican party win the governorship in Ohio",
+  "event_title": "Ohio Governor winner?",
+  "rules": "If a representative of the Republican party is inaugurated as the governor of Ohio pursuant to the 2026 election, then the market resolves to Yes.",
+  "bid": 0.30000000000000004,
+  "ask": 0.31,
+  "mid": 0.305,
+  "close_time": "2027-11-03T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/race-2026-governor-ohio.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYOH-26-D resolves Yes \"If a representative of the Democratic party is inaugurated as the governor of Ohio pursuant to the 2026 election\"; -R mirrors it for Republicans.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYOH-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-ohio.md",
+    "as_of": "2026-05-05",
+    "text": "Democrats have not won an Ohio governor race since 2006; the winner is inaugurated January 11, 2027.",
+    "source": "https://en.wikipedia.org/wiki/2026_Ohio_gubernatorial_election"
+   },
+   {
+    "file": "politics/race-2026-senate-oh.md",
+    "as_of": "2026-10-09",
+    "text": "Rules text: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Ohio for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEOHS-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-florida.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYFL-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Florida pursuant to the 2026 election, then the market resolves to Yes.\" The -R contract is the same with Republican. It settles on the party of the person inaugurated, not on the named candidate.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYFL-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-oregon.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYOR-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Oregon pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-09.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYOR-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-vermont.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYVT-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Vermont pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-05.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYVT-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2028-governor-new-hampshire.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNH-28-D: \"If a representative of the Democratic party is inaugurated as the governor of New Hampshire pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. The event subtitle reads \"In 2026\".",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNH-28?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-nevada.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNV-26-D resolves Yes \"If a representative of the Democratic party is inaugurated as the governor of Nevada pursuant to the 2026 election\"; -R mirrors it. An independent winner (e.g. Danielle Ford) would resolve both No.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNV-26?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "GOVPARTYWI-26-R",
+  "event": "GOVPARTYWI-26",
+  "title": "Will the Republican party win the governorship in Wisconsin",
+  "event_title": "Wisconsin Governor winner?",
+  "rules": "If a representative of the Republican party is inaugurated as the governor of Wisconsin pursuant to the 2026 election, then the market resolves to Yes.",
+  "bid": 0.19,
+  "ask": 0.2,
+  "mid": 0.195,
+  "close_time": "2027-11-03T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/race-2026-governor-wisconsin.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYWI-26-D resolves Yes \"If a representative of the Democratic party is inaugurated as the governor of Wisconsin pursuant to the 2026 election\"; -R mirrors it.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYWI-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-wisconsin.md",
+    "as_of": "2026-10-09",
+    "text": "Race: 2026 Wisconsin Governor Race: 2026 Wisconsin Governor politics race governor wisconsin Open-seat Wisconsin governor race (Evers retiring): Democrat David Crowley vs Republican Tom Tiffany, November 3, 2026.",
+    "source": ""
+   },
+   {
+    "file": "politics/race-2026-governor-florida.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYFL-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Florida pursuant to the 2026 election, then the market resolves to Yes.\" The -R contract is the same with Republican. It settles on the party of the person inaugurated, not on the named candidate.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYFL-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-oregon.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYOR-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Oregon pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-09.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYOR-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-vermont.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYVT-26-D: \"If a representative of the Democratic party is inaugurated as the governor of Vermont pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-05.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYVT-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2028-governor-new-hampshire.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNH-28-D: \"If a representative of the Democratic party is inaugurated as the governor of New Hampshire pursuant to the 2026 election, then the market resolves to Yes.\" The R market uses the same wording for the Republican party. The event subtitle reads \"In 2026\".",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNH-28?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-nevada.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNV-26-D resolves Yes \"If a representative of the Democratic party is inaugurated as the governor of Nevada pursuant to the 2026 election\"; -R mirrors it. An independent winner (e.g. Danielle Ford) would resolve both No.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNV-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-governor-new-york.md",
+    "as_of": "2026-10-09",
+    "text": "GOVPARTYNY-26-D resolves Yes \"If a representative of the Democratic party is inaugurated as the governor of New York pursuant to the 2026 election\"; -R mirrors it for Republicans. It settles on party at inauguration. Blakeman also holds the Conservative line, but he is the Republican nominee.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/GOVPARTYNY-26?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "HOUSEPA7-26-D",
+  "event": "HOUSEPA7-26",
+  "title": "Will Democratic win the House race for PA-7?",
+  "event_title": "PA-07 House winner?",
+  "rules": "If the House member sworn in for PA-07 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.",
+  "bid": 0.86,
+  "ask": 0.87,
+  "mid": 0.865,
+  "close_time": "2027-11-03T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/race-2026-house-pa07-pa08-wa03.md",
+    "as_of": "2026-10-09",
+    "text": "All three are party markets. HOUSEPA7-26-D: \"If the House member sworn in for PA-07 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.\" PA-08 and WA-03 use the same wording, and the R side is worded the same way for Republicans.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/HOUSEPA7-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-house-pa07-pa08-wa03.md",
+    "as_of": "2026-05-19",
+    "text": "Result: Brooks wins the PA-07 Democratic primary; Bresnahan and Cognetti unopposed in PA-08. https://en.wikipedia.org/wiki/2026_United_States_House_of_Representatives_elections_in_Pennsylvania",
+    "source": ""
+   },
+   {
+    "file": "politics/chamber-2026-house-key-districts.md",
+    "as_of": "2026-10-09",
+    "text": "House district winner markets such as HOUSETX15-26 resolve on the party of the member sworn in for the term beginning in 2027. They are eligible for accelerated determination once a consensus of media organizations projects the winner.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/HOUSETX15-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/mechanics-political-settlement.md",
+    "as_of": "2026-10-09",
+    "text": "KXHOUSERACE-MN01-26-D resolves on the party of \"the House member sworn in for MN-01 for the term beginning in 2027\" and carries the same accelerated-determination `rules_secondary` as the Senate seat markets.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXHOUSERACE-MN01-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-tx.md",
+    "as_of": "2026-10-09",
+    "text": "SENATETX-26 is a party market. \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Texas for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATETX-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-ia.md",
+    "as_of": "2026-10-09",
+    "text": "Rules text: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Iowa for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEIA-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-ks.md",
+    "as_of": "2026-10-09",
+    "text": "Rules text: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Kansas for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEKS-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-mi.md",
+    "as_of": "2026-10-09",
+    "text": "SENATEMI-26 rules: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Michigan for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEMI-26?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "HOUSEWA3-26-D",
+  "event": "HOUSEWA3-26",
+  "title": "Will Democratic win the House race for WA-3?",
+  "event_title": "WA-03 House winner?",
+  "rules": "If the House member sworn in for WA-03 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.",
+  "bid": 0.89,
+  "ask": 0.903,
+  "mid": 0.8965,
+  "close_time": "2027-11-03T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/race-2026-house-pa07-pa08-wa03.md",
+    "as_of": "2026-10-09",
+    "text": "All three are party markets. HOUSEPA7-26-D: \"If the House member sworn in for PA-07 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.\" PA-08 and WA-03 use the same wording, and the R side is worded the same way for Republicans.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/HOUSEPA7-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-house-pa07-pa08-wa03.md",
+    "as_of": "2026-10-09",
+    "text": "Race: 2026 House PA-07, PA-08 and WA-03 Race: 2026 House PA-07, PA-08 and WA-03 politics race house pennsylvania washington Three competitive House seats on November 3, 2026: two Pennsylvania seats Republicans flipped in 2024 (PA-07 Mackenzie, PA-08 Bresnahan) and Marie Gluesenkamp Perez's Trump-won Washington seat (WA-03).",
+    "source": ""
+   },
+   {
+    "file": "politics/chamber-2026-house-key-districts.md",
+    "as_of": "2026-10-09",
+    "text": "House district winner markets such as HOUSETX15-26 resolve on the party of the member sworn in for the term beginning in 2027. They are eligible for accelerated determination once a consensus of media organizations projects the winner.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/HOUSETX15-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/mechanics-political-settlement.md",
+    "as_of": "2026-10-09",
+    "text": "KXHOUSERACE-MN01-26-D resolves on the party of \"the House member sworn in for MN-01 for the term beginning in 2027\" and carries the same accelerated-determination `rules_secondary` as the Senate seat markets.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXHOUSERACE-MN01-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-tx.md",
+    "as_of": "2026-10-09",
+    "text": "SENATETX-26 is a party market. \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Texas for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATETX-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-ia.md",
+    "as_of": "2026-10-09",
+    "text": "Rules text: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Iowa for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEIA-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-ks.md",
+    "as_of": "2026-10-09",
+    "text": "Rules text: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Kansas for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEKS-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-mi.md",
+    "as_of": "2026-10-09",
+    "text": "SENATEMI-26 rules: \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Michigan for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEMI-26?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "KXALITOOUT-27JUL01",
+  "event": "KXALITOOUT",
+  "title": "Will Samuel Alito be out as before Jul 1, 2027?",
+  "event_title": "When will Justice Alito retire from the Supreme Court?",
+  "rules": "If Samuel Alito retires as Supreme Court Justice before Jul 1, 2027, then the market resolves to Yes.",
+  "bid": 0.28,
+  "ask": 0.32,
+  "mid": 0.3,
+  "close_time": "2027-07-01T03:59:00Z",
+  "knowledge": [
+   {
+    "file": "politics/policy-supreme-court.md",
+    "as_of": "2026-10-09",
+    "text": "Market: Alito out before Jul 2027 at 0.25; Oldham leads next justice at 0.21. https://api.elections.kalshi.com/trade-api/v2/events/KXALITOOUT?with_nested_markets=true",
+    "source": ""
+   },
+   {
+    "file": "politics/policy-supreme-court.md",
+    "as_of": "2026-10-09",
+    "text": "Samuel Alito, born Apr. 1, 1950, took his seat Jan. 31, 2006 (76 in October 2026).",
+    "source": "https://www.supremecourt.gov/about/biographies.aspx"
+   },
+   {
+    "file": "politics/chamber-2026-redistricting.md",
+    "as_of": "2026-05-08",
+    "text": "Court: the Virginia Supreme Court voids the amendment 4-3. https://thehill.com/regulation/court-battles/5869616-virginia-supreme-court-tosses-redistricting-map-2026-midterms/",
+    "source": ""
+   },
+   {
+    "file": "politics/policy-impeachment-removal.md",
+    "as_of": "2026-10-09",
+    "text": "KXIMPEACH ladder on Oct. 9, 2026: before Jan 1, 2027 last 0.044; before Feb 1, 2027 0.29 (bid 0.11 / ask 0.26); before Mar 1, 2027 0.32; before Jul 1, 2027 0.43; before Oct 1, 2027 0.64; before Jan 1, 2028 0.68.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXIMPEACH?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-redistricting.md",
+    "as_of": "2026-06-02",
+    "text": "Court: SCOTUS allows Alabama's 2023 map. https://www.nbcnews.com/politics/supreme-court/supreme-court-allows-alabama-congress-map-eliminate-black-district-rcna346920",
+    "source": ""
+   },
+   {
+    "file": "politics/policy-legislation.md",
+    "as_of": "2026-10-09",
+    "text": "Oct. 9, 2026 prices for a crypto market-structure law: before Jan 1, 2027 0.066; before Jul 1, 2027 0.16; before Jan 1, 2028 0.18.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXCRYPTOSTRUCTURE-26JAN?with_nested_markets=true"
+   },
+   {
+    "file": "politics/intl-france-2027-presidential.md",
+    "as_of": "2026-07-07",
+    "text": "Court: appeal upholds the conviction but shortens the ban, leaving Le Pen eligible for 2027. https://en.wikipedia.org/wiki/2027_French_presidential_election",
+    "source": ""
+   },
+   {
+    "file": "politics/race-2026-house-pa07-pa08-wa03.md",
+    "as_of": "2026-09-17",
+    "text": "Court: PA Supreme Court keeps Tupone off the PA-07 ballot. https://politicspa.com/pennsylvania-supreme-court-says-no-to-andrew-tupone-in-pa-07/153407/",
+    "source": ""
+   }
+  ]
+ },
+ {
+  "ticker": "KXBLUESTRSEN-27JAN03-ME",
+  "event": "KXBLUESTRSEN-27JAN03",
+  "title": "Will Maine be the state with the highest 2024 Harris-minus-Trump presidential margin among states where a Republican candidate wins a 2026 U.S. Senate election?",
+  "event_title": "Bluest state to elect a Republican senator in 2026?",
+  "rules": "If Maine is the state with the highest 2024 Harris-minus-Trump presidential margin among states where a Republican candidate wins a 2026 U.S. Senate election, then the market resolves to Yes.",
+  "bid": 0.36,
+  "ask": 0.39,
+  "mid": 0.375,
+  "close_time": "2027-01-03T13:59:00Z",
+  "knowledge": [
+   {
+    "file": "politics/race-2026-senate-tx.md",
+    "as_of": "2026-10-09",
+    "text": "KXMIDTERMMOV-TXSEND / -TXSENR are margin ladders: \"If the Democratic [Republican] Party wins the 2026 U.S. Senate election in Texas by N percentage points or more, then the market resolves to Yes\" (D strikes 1\u20137, R strikes 1\u201313). Margin is the party's vote share minus the runner-up's, with no rounding and the lower bound inclusive. Certified results from the state election authority settle it.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXMIDTERMMOV-TXSEND?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-senate-control.md",
+    "as_of": "2026-07-08",
+    "text": "Withdrawal: Platner suspends his Maine bid. https://www.nbcnews.com/politics/politics-news/live-blog/graham-platner-maine-senate-election-trump-live-updates-rcna353556",
+    "source": ""
+   },
+   {
+    "file": "politics/chamber-2026-senate-control.md",
+    "as_of": "2026-07-25",
+    "text": "Former state Senate President Troy Jackson replaced Platner as the Maine Democratic nominee against Sen. Susan Collins. He won the convention vote 566-5.",
+    "source": "https://www.usatoday.com/story/news/politics/2026/07/25/troy-jackson-replaces-graham-platner-maine-senate-democrat-nominee/91020463007/"
+   },
+   {
+    "file": "politics/race-2026-senate-me.md",
+    "as_of": "2026-10-07",
+    "text": "Collins is the only Republican senator from a state Trump never won in any of his three campaigns. Democrats have not won a Maine Senate election since 1988.",
+    "source": "https://en.wikipedia.org/wiki/2026_United_States_Senate_election_in_Maine"
+   },
+   {
+    "file": "politics/race-2026-senate-me.md",
+    "as_of": "2024-11-05",
+    "text": "2024 presidential: Harris won Maine statewide 52.40% to 45.46% (D+6.94).",
+    "source": "https://en.wikipedia.org/wiki/2024_United_States_presidential_election"
+   },
+   {
+    "file": "politics/cycle-2024-general-results.md",
+    "as_of": "2025-01-16",
+    "text": "Official swing-state margins (Trump minus Harris, share of total vote): AZ +5.53, NV +3.10, NC +3.21, GA +2.19, PA +1.70, MI +1.41, WI +0.86.",
+    "source": "https://www.fec.gov/resources/cms-content/documents/2024presgeresults.pdf"
+   },
+   {
+    "file": "politics/cycle-2024-general-results.md",
+    "as_of": "2025-01-16",
+    "text": "Official electoral vote: Trump 312, Harris 226. Maine split 1 Trump / 3 Harris and Nebraska split 4 Trump / 1 Harris.",
+    "source": "https://www.fec.gov/resources/cms-content/documents/2024presgeresults.pdf"
+   },
+   {
+    "file": "politics/race-2026-senate-mn.md",
+    "as_of": "2026-10-05",
+    "text": "CNN lists Minnesota among long-shot GOP targets and notes Harris carried the state by 4 points in 2024.",
+    "source": "https://www.cnn.com/2026/10/05/politics/10-senate-seats-most-likely-to-flip-2026"
+   }
+  ]
+ },
+ {
+  "ticker": "KXCABOUT-26MAY22-PHEG",
+  "event": "KXCABOUT-26MAY22",
+  "title": "Will Pete Hegseth be the next person to leave the Trump Cabinet?",
+  "event_title": "Who will leave Trump's Cabinet next?",
+  "rules": "If Pete Hegseth is the first member of the Cabinet of Donald Trump to leave or announce they will leave (such as by quitting, being fired, or being impeached) after May 22, 2026, then the market resolves to Yes.",
+  "bid": 0.22,
+  "ask": 0.25,
+  "mid": 0.235,
+  "close_time": "2029-01-20T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/policy-personnel-next.md",
+    "as_of": "2026-10-09",
+    "text": "KXCABOUT rule text: \"If [name] is the first member of the Cabinet of Donald Trump to leave or announce they will leave (such as by quitting, being fired, or being impeached) after May 22, 2026, then the market resolves to Yes.\" Secondary: \"If two persons announce they intend to leave at the same time, then the one who leaves first will resolve to Yes and all others will resolve to No. If multiple persons both announce they intend to leave and leave at the same time as other members, then the one whose last name is alphabetically first will resolve to Yes and all others will resolve to No. A leave of absence does not constitute leaving the position. For purposes of this Contract, the Cabinet includes the heads of the 15 government agencies in the Cabinet as of Issuance, as well the Administrator of the EPA, the President's Chief of Staff, Director of National Intelligence, Director of OMB, Director of CIA, United States Trade Representative, Ambassador to the UN, Chair of the Council of Economic Advisers, Administrator of the SBA, and Director of OSTP. Acting roles are not included. Leaving office as a result of death is not encompassed by the Payout Criterion.\" Unlike KXKASHOUT, an announcement alone is enough here. FBI director and press secretary are outside the defined Cabinet.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXCABOUT-26MAY22?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-personnel-next.md",
+    "as_of": "2026-10-09",
+    "text": "Policy: Next Personnel Moves (Patel, Next Cabinet Exit, Press Secretary) Policy: Next Personnel Moves (Patel, Next Cabinet Exit, Press Secretary) politics policy cabinet trump personnel Scope: whether and when Kash Patel leaves the FBI; which Cabinet-level official is the first to leave or announce an exit after May 22, 2026; and when Trump names Karoline Leavitt's successor. Extends [[policy-cabinet-departures]].",
+    "source": ""
+   },
+   {
+    "file": "politics/policy-cabinet-departures.md",
+    "as_of": "2026-09-10",
+    "text": "House Democrats said they would pursue Defense Secretary Pete Hegseth if they win the House. Rep. Robert Garcia said \"Hegseth should not be in office \u2014 a lot of others should be impeached.\"",
+    "source": "https://idahonews.com/news/nation-world/democrats-plan-to-go-after-defense-secretary-hegseth-if-they-win-2026-midterms-robert-garcia-pentagon-jason-crow"
+   },
+   {
+    "file": "politics/policy-cabinet-departures.md",
+    "as_of": "2026-08-12",
+    "text": "Trump announced on Aug. 12, 2026 that Press Secretary Karoline Leavitt would leave at the end of August.",
+    "source": "https://www.wgcu.org/2026-08-12/white-house-press-secretary-leaving"
+   },
+   {
+    "file": "politics/policy-impeachment-removal.md",
+    "as_of": "2026-10-09",
+    "text": "KXTRUMPOUT27 also counts an announcement that he will leave within the next year, but not an acknowledgement of the normal term limit. Death settles at the last traded price.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXTRUMPOUT27-27?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-ne.md",
+    "as_of": "2026-07-17",
+    "text": "Event: Burbank files to leave the ballot to back Osborn. https://en.wikipedia.org/wiki/2026_United_States_Senate_election_in_Nebraska",
+    "source": ""
+   },
+   {
+    "file": "politics/intl-leaders-out-2026.md",
+    "as_of": "2026-10-09",
+    "text": "A strike resolves Yes if the leader officially announces they will leave the named office, or actually leaves it, before Jan 1, 2027. An announcement counts only if a Source Agency reports it and it does not put the departure more than a year out.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXLEADERSOUT-27JAN01?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-impeachment-removal.md",
+    "as_of": "2026-09-10",
+    "text": "Statement: House Democrats signal impeachment talk about administration officials. https://idahonews.com/news/nation-world/democrats-plan-to-go-after-defense-secretary-hegseth-if-they-win-2026-midterms-robert-garcia-pentagon-jason-crow",
+    "source": ""
+   }
+  ]
+ },
+ {
+  "ticker": "KXCRYPTOSTRUCTURE-27JAN-28",
+  "event": "KXCRYPTOSTRUCTURE-26JAN",
+  "title": "Will crypto market structure legislation become law before Jan 1, 2028?",
+  "event_title": "Will the Clarity Act become law?",
+  "rules": "If a crypto market structure bill has become law before Jan 1, 2028, then the market resolves to Yes.",
+  "bid": 0.18,
+  "ask": 0.21,
+  "mid": 0.195,
+  "close_time": "2028-01-01T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/policy-legislation.md",
+    "as_of": "2026-10-09",
+    "text": "Oct. 9, 2026 prices for a crypto market-structure law: before Jan 1, 2027 0.066; before Jul 1, 2027 0.16; before Jan 1, 2028 0.18.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXCRYPTOSTRUCTURE-26JAN?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-legislation.md",
+    "as_of": "2026-10-09",
+    "text": "Policy: Trump-Era Legislation Markets Policy: Trump-Era Legislation Markets politics policy base-rate legislation congress Scope: dated floor history and pricing for the SAVE Act and SAVE America Act, the CLARITY Act (crypto market structure), tariff \"dividend\" checks and the KXBILLS basket, how the Senate filibuster constrains them, and GovTrack base rates for bills that reach a floor vote becoming law.",
+    "source": ""
+   },
+   {
+    "file": "politics/policy-trump-executive-actions.md",
+    "as_of": "2026-10-09",
+    "text": "KXSUSPENDGASTAX rule text: \"If legislation that would temporarily suspend or reduce the federal excise tax on gasoline has become law after Issuance and before Jan 1, 2027, then the market resolves to Yes.\" Secondary: \"For 'become law' markets, the bill must be signed by the President or become law through veto override. Presidential pocket vetoes that expire resolve to No.\" An executive order alone cannot qualify.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXSUSPENDGASTAX-26MAY?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-trump-executive-actions.md",
+    "as_of": "2026-10-09",
+    "text": "KXGAMBLINGREPEAL rule text: \"If a bill that removes/changes the gambling tax provision in the One Big Beautiful Bill Act ('OBBB') has become law after Issuance and before [date], then the market resolves to Yes.\" Any enacted change to the provision qualifies, not only a full repeal.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXGAMBLINGREPEAL-26JAN?with_nested_markets=true"
+   },
+   {
+    "file": "politics/nomination-2028-general.md",
+    "as_of": "2026-10-09",
+    "text": "KXPRESMATCHUP-28NOV07 is a combination market. It pays only if both named people become the D and R nominees under the PRESNOM rulesets, and it resolves No as soon as either leg becomes impossible. Close 2028-11-07.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXPRESMATCHUP-28NOV07?with_nested_markets=true"
+   },
+   {
+    "file": "politics/nomination-2028-republican.md",
+    "as_of": "2026-10-09",
+    "text": "KX2028RRUN-28 requires a campaign announcement for the 2028 Republican nomination before Jan 1, 2028, verified by major outlets. Close 2028-01-01. A Vance decision after Jan 1, 2028 would settle No.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KX2028RRUN-28?with_nested_markets=true"
+   },
+   {
+    "file": "politics/nomination-2028-democratic.md",
+    "as_of": "2026-10-09",
+    "text": "KX2028DRUN-28 rule: Yes if the person \"announces a presidential campaign to contest the presidential nomination of the Democratic party for the 2028 U.S. presidential election before Jan 1, 2028.\" Resolved from major outlets (AP, Reuters, NYT, WaPo, CNN, Politico, Axios, and others). Contract terms: 2028RUNPARTY.pdf. Close 2028-01-01.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/series/KX2028DRUN"
+   },
+   {
+    "file": "politics/nomination-2028-democratic.md",
+    "as_of": "2026-08-15",
+    "text": "Adopted early-window order and dates: South Carolina Jan 22, Nevada Feb 1, New Hampshire Feb 8, New Mexico Feb 15, Michigan Feb 22, Virginia Feb 29, 2028.",
+    "source": "https://washingtonsun.com/democrats/dnc-new-presidential-primary-calendar-black-vote-south-carolina"
+   }
+  ]
+ },
+ {
+  "ticker": "KXDSENATESEATS-27-ABOVE52",
+  "event": "KXDSENATESEATS-27",
+  "title": "Will the Democratic Party hold more than 52 seats in the 120th Congress?",
+  "event_title": "How many Senate seats will Democrats hold after the Midterms?",
+  "rules": "If the Democratic Party has above 52 Senate seats on Feb 1, 2027, then the market resolves to Yes.",
+  "bid": 0.35000000000000003,
+  "ask": 0.36,
+  "mid": 0.355,
+  "close_time": "2027-02-01T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/chamber-2026-senate-control.md",
+    "as_of": "2026-10-09",
+    "text": "KXDSENATESEATS-27 counts Democratic seats on Feb 1, 2027, and independents who caucus with a party count with that party (for example, Sanders counts as D). An independent who caucuses with neither party, such as Osborn if he won, would not add to the D count.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXDSENATESEATS-27?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-senate-control.md",
+    "as_of": "2026-10-09",
+    "text": "Control takes 51 seats, or 50 seats plus the vice presidency. With VP JD Vance a Republican, Democrats need a net gain of 4 to reach 51.",
+    "source": "https://en.wikipedia.org/wiki/2026_United_States_Senate_elections"
+   },
+   {
+    "file": "politics/chamber-2026-balance-of-power-combos.md",
+    "as_of": "2026-10-09",
+    "text": "KXBLUEWAVECOMBO-27FEB rule: Yes if Democrats hold 218 or more House seats AND 49 or more Senate seats after the 2026 midterms.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXBLUEWAVECOMBO-27FEB?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-balance-of-power-combos.md",
+    "as_of": "2026-10-09",
+    "text": "KXBLUETSUNAMICOMBO-27FEB rule: Yes if Democrats hold 235 or more House seats AND 51 or more Senate seats after the 2026 midterms.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXBLUETSUNAMICOMBO-27FEB?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-tx.md",
+    "as_of": "2026-10-09",
+    "text": "SENATETX-26 is a party market. \"If a representative of the Republican [Democratic] party is sworn in as a Senator of Texas for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATETX-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/baserate-midterm-penalty.md",
+    "as_of": "2022-08-30",
+    "text": "Across 1934-2018 midterms the president's party gained House seats only three times and Senate seats six times; correlation of approval with seat change was r = 0.61 for the House and r = 0.45 for the Senate.",
+    "source": "https://presidency.ucsb.edu/analyses/the-2022-midterm-elections-what-the-historical-data-suggest"
+   },
+   {
+    "file": "politics/chamber-2026-house-control.md",
+    "as_of": "2026-10-09",
+    "text": "KXDHOUSESEATS-27 and KXRHOUSESEATS-27 count seats held on Feb 1, 2027, including individuals who caucus with the party. Kiley-type independents count with the party they caucus with.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXDHOUSESEATS-27?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-id.md",
+    "as_of": "2026-10-09",
+    "text": "SENATEID-26-R: \"If a representative of the Republican party is sworn in as a Senator of Idaho for the term beginning in 2027, then the market resolves to Yes.\" The D market uses the same wording for the Democratic party.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEID-26?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "KXFEDERALCHARGE-27JAN01-CHUT",
+  "event": "KXFEDERALCHARGE-27JAN01",
+  "title": "Will Cassidy Hutchinson be charged with a any crime before Jan 1, 2027?",
+  "event_title": "Who will be charged with a federal crime in 2026?",
+  "rules": "If Cassidy Hutchinson has been formally charged with a federal crime  after Issuance and before Jan 1, 2027, then the market resolves to Yes.",
+  "bid": 0.46,
+  "ask": 0.49,
+  "mid": 0.475,
+  "close_time": "2027-01-01T04:59:00Z",
+  "knowledge": [
+   {
+    "file": "politics/policy-pardons-and-prosecutions.md",
+    "as_of": "2025-11-24",
+    "text": "James Comey was indicted in September 2025 on one false-statements count and one obstruction count. A federal judge dismissed the case on Nov. 24, 2025.",
+    "source": "https://en.wikipedia.org/wiki/James_Comey"
+   },
+   {
+    "file": "politics/policy-pardons-and-prosecutions.md",
+    "as_of": "2026-10-09",
+    "text": "KXFEDERALCHARGE-27JAN01 (new federal charge in 2026) on Oct. 9, 2026: Lisa Cook 0.15, Jack Smith 0.13, Letitia James 0.11, Fani Willis 0.11, James Clapper 0.10, Hillary Clinton 0.032.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXFEDERALCHARGE-27JAN01?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-trump-executive-actions.md",
+    "as_of": "2026-10-09",
+    "text": "KXSUSPENDGASTAX rule text: \"If legislation that would temporarily suspend or reduce the federal excise tax on gasoline has become law after Issuance and before Jan 1, 2027, then the market resolves to Yes.\" Secondary: \"For 'become law' markets, the bill must be signed by the President or become law through veto override. Presidential pocket vetoes that expire resolve to No.\" An executive order alone cannot qualify.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXSUSPENDGASTAX-26MAY?with_nested_markets=true"
+   },
+   {
+    "file": "markets/how-prediction-markets-work.md",
+    "as_of": "2026-01-05",
+    "text": "The 2024 presidential market charged no transaction fees.",
+    "source": "docs/papers/2601.01706.md, Gebele & Matthes p.23"
+   },
+   {
+    "file": "politics/policy-impeachment-removal.md",
+    "as_of": "2026-10-09",
+    "text": "KXIMPEACH ladder on Oct. 9, 2026: before Jan 1, 2027 last 0.044; before Feb 1, 2027 0.29 (bid 0.11 / ask 0.26); before Mar 1, 2027 0.32; before Jul 1, 2027 0.43; before Oct 1, 2027 0.64; before Jan 1, 2028 0.68.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXIMPEACH?with_nested_markets=true"
+   },
+   {
+    "file": "politics/intl-iran-markets.md",
+    "as_of": "2026-10-09",
+    "text": "On Kalshi, KXHORMUZNORM-26MAR17 bid/ask: before Nov 1, 2026 0.02/0.03; before Dec 1, 2026 0.06/0.07; before Jan 1, 2027 0.14/0.15; before Apr 1, 2027 0.32/0.35; before Jul 1, 2027 0.43/0.46; before Jan 1, 2028 0.54/0.55; before Jan 1, 2029 0.69/0.70.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXHORMUZNORM-26MAR17?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-legislation.md",
+    "as_of": "2026-10-09",
+    "text": "Oct. 9, 2026 prices for a crypto market-structure law: before Jan 1, 2027 0.066; before Jul 1, 2027 0.16; before Jan 1, 2028 0.18.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXCRYPTOSTRUCTURE-26JAN?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-legislation.md",
+    "as_of": "2026-10-09",
+    "text": "Oct. 9, 2026 prices: KXSAVEACT-27 (H.R. 22 law before Jan 4, 2027) 0.021; KXELECTIONBILL (proof-of-citizenship law) before Jan 1, 2027 0.039 and before Jan 1, 2028 bid 0.04 / ask 0.13.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXELECTIONBILL?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "KXGREENLAND-29",
+  "event": "KXGREENLAND-29",
+  "title": "Will Trump buy Greenland?",
+  "event_title": "Will Trump buy at least part of Greenland?",
+  "rules": "If the United States purchases at least part of Greenland from Denmark before January 20, 2029, then the market resolves to Yes.",
+  "bid": 0.13,
+  "ask": 0.15,
+  "mid": 0.14,
+  "close_time": "2029-01-20T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/policy-greenland-territory.md",
+    "as_of": "2026-10-09",
+    "text": "KXGREENLAND-29 needs the United States to purchase at least part of Greenland from Denmark before Jan. 20, 2029. A security or basing agreement is not a purchase.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXGREENLAND-29?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-greenland-territory.md",
+    "as_of": "2026-10-09",
+    "text": "KXGREENLAND-29 (U.S. buys at least part of Greenland) on Oct. 9, 2026: before 2027 last 0.035 (bid 0.022); before Jan 20, 2029 last 0.13 (bid 0.13 / ask 0.14).",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXGREENLAND-29?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-trump-executive-actions.md",
+    "as_of": "2026-10-09",
+    "text": "KXINSURRECTION rule text: \"If the President of the United States has invoked the Insurrection Act to deploy the United States military and/or the federalized National Guard within the United States before Jan 1, 2027, then the market resolves to Yes.\" The 2028 and Jan 20, 2029 strikes use the same wording.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXINSURRECTION-29?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-trump-tenure.md",
+    "as_of": "2026-10-09",
+    "text": "KXTRUMPRESIGN rule text: \"If the President of the United States elected for the 2025-2029 term resigns the office, then the market resolves to Yes.\" It closes Jan. 21, 2029.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events?series_ticker=KXTRUMPRESIGN&with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-impeachment-removal.md",
+    "as_of": "2026-10-09",
+    "text": "KXTRUMPREMOVE (impeached and convicted before Jan 20, 2029) last 0.20 (bid 0.19 / ask 0.20) on Oct. 9, 2026.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXTRUMPREMOVE?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-impeachment-removal.md",
+    "as_of": "2026-10-09",
+    "text": "KXIMPEACH-29 (impeached before Jan 20, 2029) last 0.66 (bid 0.65 / ask 0.66) on Oct. 9, 2026.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXIMPEACH-29?with_nested_markets=true"
+   },
+   {
+    "file": "politics/nomination-2028-general.md",
+    "as_of": "2026-10-09",
+    "text": "KXPRESPARTY-2028: Yes for a party \"if a representative of the [party] is inaugurated as President for the term beginning January 20, 2029.\" Settles on inauguration, not on Election Day.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXPRESPARTY-2028?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-trump-tenure.md",
+    "as_of": "2026-10-09",
+    "text": "KXTRUMPRESIGN (the president elected for the 2025-2029 term resigns) last traded 0.20 (bid 0.19 / ask 0.20) on Oct. 9, 2026.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events?series_ticker=KXTRUMPRESIGN&with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "KXHORMUZNORM-26MAR17-B271201",
+  "event": "KXHORMUZNORM-26MAR17",
+  "title": "Will the 7-day moving average of transit calls through the Strait of Hormuz as reported by the IMF PortWatch be above 60 before December 1, 2027?",
+  "event_title": "When will traffic at the Strait of Hormuz return to normal?",
+  "rules": "If the 7-day moving average of transit calls through the Strait of Hormuz as reported by the IMF PortWatch is above 60 before December 1, 2027, then the market resolves to Yes.",
+  "bid": 0.47000000000000003,
+  "ask": 0.53,
+  "mid": 0.5,
+  "close_time": "2027-12-07T13:59:00Z",
+  "knowledge": [
+   {
+    "file": "politics/intl-iran-markets.md",
+    "as_of": "2026-10-09",
+    "text": "KXHORMUZNORM strikes resolve Yes if the 7-day moving average of Hormuz transit calls on IMF PortWatch is above 60 before the strike date.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXHORMUZNORM-26MAR17?with_nested_markets=true"
+   },
+   {
+    "file": "politics/intl-iran-markets.md",
+    "as_of": "2026-10-09",
+    "text": "IMF PortWatch daily Hormuz transit calls (n_total) for Sep 28-Oct 4, 2026 were 4, 1, 4, 0, 4, 2, 4, a 7-day average of about 2.7. The 2025 daily average was 85.5.",
+    "source": "https://services9.arcgis.com/weJ1QsnbMYJlCHdG/arcgis/rest/services/Daily_Chokepoints_Data/FeatureServer/0/query?where=portname%3D%27Strait%20of%20Hormuz%27&outFields=date,n_total&orderByFields=date%20DESC&f=json"
+   },
+   {
+    "file": "politics/policy-trump-approval.md",
+    "as_of": "2026-10-08",
+    "text": "On Oct. 8, 2026 the NYT average was 37% approve / 60% disapprove and Silver Bulletin was 37.1% / 60.1%, so RCP ran about 1 point above both.",
+    "source": "https://spokesman.com/stories/2026/oct/08/trump-voters-not-excited-for-midterms-as-approval-"
+   },
+   {
+    "file": "politics/policy-trump-approval.md",
+    "as_of": "2026-10-09",
+    "text": "Brackets are 0.1-point wide with open-ended tails (\"Below X\" / \"Above Y\"), and the tails move each day. Single brackets (e.g., 38.1%) need the exact one-decimal value.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXTRUMPAPPROVE-26OCT09?with_nested_markets=true"
+   },
+   {
+    "file": "markets/how-prediction-markets-work.md",
+    "as_of": "2026-01-31",
+    "text": "On Kalshi from 2021 to April 2025 (46,282 YES contracts), the average pre-fee return is about \u221220%. Contracts at 10c or below lose more than 60% after fees.",
+    "source": "docs/papers/kalshi.md p.3, p.17"
+   },
+   {
+    "file": "politics/race-2026-governor-oregon.md",
+    "as_of": "2026-10-08",
+    "text": "Silver Bulletin average through Oct 1: Kotek 45.9, Drazan 43.9 (Kotek +2.0).",
+    "source": "https://en.wikipedia.org/wiki/2026_Oregon_gubernatorial_election"
+   },
+   {
+    "file": "politics/race-2026-governor-arizona.md",
+    "as_of": "2026-10-08",
+    "text": "Decision Desk HQ average (through Oct 5): Hobbs 48.6, Biggs 44.3 (Hobbs +4.3).",
+    "source": "https://votes.decisiondeskhq.com/races/2026-11-03/arizona-governor-general-election/polling"
+   },
+   {
+    "file": "politics/race-2026-governor-minnesota.md",
+    "as_of": "2026-09-15",
+    "text": "RealClearPolitics average (through Sep 15 polls): Klobuchar 49.4, Demuth 39.8 (Klobuchar +9.6).",
+    "source": "https://www.realclearpolling.com/polls/governor/general/2026/minnesota/demuth-vs-klobuchar"
+   }
+  ]
+ },
+ {
+  "ticker": "KXHOUSERACE-MN01-26-R",
+  "event": "KXHOUSERACE-MN01-26",
+  "title": "Will Republican win the House race for MN-01?",
+  "event_title": "MN-01 House winner?",
+  "rules": "If the House member sworn in for MN-01 for the term beginning in 2027 is a member of the Republican Party, then the market resolves to Yes.",
+  "bid": 0.76,
+  "ask": 0.78,
+  "mid": 0.77,
+  "close_time": "2027-11-03T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/mechanics-political-settlement.md",
+    "as_of": "2026-10-09",
+    "text": "KXHOUSERACE-MN01-26-D resolves on the party of \"the House member sworn in for MN-01 for the term beginning in 2027\" and carries the same accelerated-determination `rules_secondary` as the Senate seat markets.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXHOUSERACE-MN01-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-house-key-districts.md",
+    "as_of": "2026-10-09",
+    "text": "House district winner markets such as HOUSETX15-26 resolve on the party of the member sworn in for the term beginning in 2027. They are eligible for accelerated determination once a consensus of media organizations projects the winner.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/HOUSETX15-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/chamber-2026-house-key-districts.md",
+    "as_of": "2026-10-09",
+    "text": "Among KXHOUSERACE events, open interest leaders are FL-14 (~186K), MN-01 (~171K), FL-25 (~154K), NY-01 (~146K), TX-23 (~126K), AL-02 (~111K), OH-07 (~93K) and CO-04 (~92K).",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=KXHOUSERACE&status=open"
+   },
+   {
+    "file": "politics/mechanics-political-settlement.md",
+    "as_of": "2026-10-09",
+    "text": "SENATEGA-26-D `rules_primary` reads: \"If a representative of the Democratic party is sworn in as a Senator of Georgia for the term beginning in 2027, then the market resolves to Yes.\"",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/markets?event_ticker=SENATEGA-26"
+   },
+   {
+    "file": "politics/race-2026-house-pa07-pa08-wa03.md",
+    "as_of": "2026-10-09",
+    "text": "All three are party markets. HOUSEPA7-26-D: \"If the House member sworn in for PA-07 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.\" PA-08 and WA-03 use the same wording, and the R side is worded the same way for Republicans.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/HOUSEPA7-26?with_nested_markets=true"
+   },
+   {
+    "file": "markets/how-prediction-markets-work.md",
+    "as_of": "2026-10-09",
+    "text": "CONTROLH-2026 `rules_secondary` reads: \"This market may be determined early based on a consensus of media calls projecting control of the U.S. House... Otherwise, victory will be determined by the party identification of the Speaker of the House on February 1, 2027.\"",
+    "source": "GET https://api.elections.kalshi.com/trade-api/v2/markets?series_ticker=CONTROLH&status=open"
+   },
+   {
+    "file": "politics/race-2026-senate-ar.md",
+    "as_of": "2026-10-09",
+    "text": "SENATEAR-26-R: \"If a representative of the Republican party is sworn in as a Senator of Arkansas for the term beginning in 2027, then the market resolves to Yes.\" The D market uses the same wording for the Democratic party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-04.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATEAR-26?with_nested_markets=true"
+   },
+   {
+    "file": "politics/race-2026-senate-tn.md",
+    "as_of": "2026-10-09",
+    "text": "SENATETN-26-R: \"If a representative of the Republican party is sworn in as a Senator of Tennessee for the term beginning in 2027, then the market resolves to Yes.\" The D market uses the same wording for the Democratic party. Both can be settled early once a consensus of media organizations projects the winner. Expected expiration is 2027-01-04.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/SENATETN-26?with_nested_markets=true"
+   }
+  ]
+ },
+ {
+  "ticker": "KXINSURRECTION-29",
+  "event": "KXINSURRECTION-29",
+  "title": "Will Trump invoke the Insurrection Act during his Presidency?",
+  "event_title": "Will Trump invoke the Insurrection Act?",
+  "rules": "If the President of the United States has invoked the Insurrection Act to deploy the United States military and/or the federalized National Guard within the United States before Jan 20, 2029, then the market resolves to Yes.",
+  "bid": 0.43,
+  "ask": 0.46,
+  "mid": 0.445,
+  "close_time": "2029-01-20T15:00:00Z",
+  "knowledge": [
+   {
+    "file": "politics/policy-trump-executive-actions.md",
+    "as_of": "2026-10-09",
+    "text": "KXINSURRECTION rule text: \"If the President of the United States has invoked the Insurrection Act to deploy the United States military and/or the federalized National Guard within the United States before Jan 1, 2027, then the market resolves to Yes.\" The 2028 and Jan 20, 2029 strikes use the same wording.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXINSURRECTION-29?with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-trump-executive-actions.md",
+    "as_of": "2026-01-16",
+    "text": "On Jan. 15, 2026, Trump threatened to invoke the Insurrection Act over the Minneapolis protests against ICE operations. He backed off the next day, saying there was not a \"reason right now,\" and added, \"if I needed it, I'd use it.\"",
+    "source": "https://en.wikipedia.org/wiki/Domestic_military_deployments_by_the_second_Trump_administration"
+   },
+   {
+    "file": "politics/policy-trump-tenure.md",
+    "as_of": "2026-10-09",
+    "text": "KXTRUMPRESIGN rule text: \"If the President of the United States elected for the 2025-2029 term resigns the office, then the market resolves to Yes.\" It closes Jan. 21, 2029.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events?series_ticker=KXTRUMPRESIGN&with_nested_markets=true"
+   },
+   {
+    "file": "politics/policy-greenland-territory.md",
+    "as_of": "2026-10-09",
+    "text": "KXGREENLAND-29 needs the United States to purchase at least part of Greenland from Denmark before Jan. 20, 2029. A security or basing agreement is not a purchase.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/events/KXGREENLAND-29?with_nested_markets=true"
+   },
+   {
+    "file": "politics/nomination-2028-republican.md",
+    "as_of": "2026-07-27",
+    "text": "Asia Business Daily reported that Trump said on July 24, 2026: \"I am going to run for a fourth term as President of the United States.\" The paper listed this as one of his repeated third-term references.",
+    "source": "https://view.asiae.co.kr/en/article/2026072709330592911"
+   },
+   {
+    "file": "politics/chamber-2026-house-control.md",
+    "as_of": "2026-10-08",
+    "text": "Ratings: Sabato lists 20 toss-ups. https://en.wikipedia.org/wiki/2026_United_States_House_of_Representatives_election_ratings",
+    "source": ""
+   },
+   {
+    "file": "politics/policy-greenland-territory.md",
+    "as_of": "2025-12-31",
+    "text": "Trump appointed Louisiana Gov. Jeff Landry special envoy to Greenland in December 2025; Landry said he would work to make Greenland part of the United States.",
+    "source": "https://en.wikipedia.org/wiki/Greenland_crisis"
+   },
+   {
+    "file": "politics/nomination-2028-general.md",
+    "as_of": "2026-10-09",
+    "text": "KXPRESPERSON-28: \"If [person] is the next person inaugurated as President for the term beginning in 2029, then the market resolves to Yes.\" Source: Office of the Presidency. Expected expiration 2029-01-21.",
+    "source": "https://api.elections.kalshi.com/trade-api/v2/series/KXPRESPERSON"
+   }
+  ]
+ }
+]

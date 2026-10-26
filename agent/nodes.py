@@ -13,9 +13,11 @@ import json
 import os
 import time
 
-from .config import MODELS, RISK
-from .knowledge_graph import VaultGraph
-from .risk import PortfolioState, evaluate
+from .config import EXITS, MODELS, ORDER_STP, ORDER_TIME_IN_FORCE, RISK
+from .exits import default_levels, evaluate_exit
+from .knowledge_graph import CONTEXT_HEADER, SLOT_LABELS, VaultGraph
+from .portfolio import Portfolio, Position
+from .risk import evaluate
 from .state import AgentState
 
 _GRAPH: VaultGraph | None = None
@@ -56,10 +58,19 @@ def triage_node(state: AgentState) -> AgentState:
 
     client = _anthropic()
     if client is None:
-        # No API key: fall back to entity match alone. Explicitly recorded so
-        # the audit log never implies an LLM judged this.
-        return {**state, "is_relevant": True,
-                "triage_reason": "entity match (no LLM key; T2 skipped)",
+        # T2 cannot run. Degrade CLOSED, matching T5: previously this returned
+        # is_relevant=True, so every entity match fell through to T4 and spent
+        # real Kalshi API calls on headlines that judge_node could never judge.
+        # seed_search above is free and local, so it still runs -- it is the
+        # graph edge, not the search, that reaches T4.
+        allowed = RISK.allow_market_snapshot_without_triage
+        return {**state,
+                "is_relevant": allowed,
+                "decision": "SKIPPED_NO_KEY",
+                "triage_reason": (
+                    "T2 skipped - no API key. Pipeline short-circuit to END "
+                    "unless ALLOW_MARKET_SNAPSHOT_WITHOUT_TRIAGE=true"
+                    + (" (override ON: proceeding to T4)" if allowed else "")),
                 "entities": seeds}
 
     prompt = (
@@ -94,10 +105,40 @@ def triage_node(state: AgentState) -> AgentState:
 # ---------------------------------------------------------------- T3
 
 def retrieve_node(state: AgentState) -> AgentState:
-    """Knowledge-graph retrieval from the vault (free, local)."""
+    """Knowledge-graph retrieval from the vault (free, local).
+
+    Produces two things:
+      kg_context     -- the full prose blocks (kept for the audit log)
+      expert_context -- <=800 chars of compressed, slot-tagged facts, which is
+                        what actually goes into the T5 prompt. The point is
+                        that the expensive model reasons over pre-computed
+                        facts instead of paying to read 6 x 900 chars of note
+                        body every time.
+    """
     title = state.get("news", {}).get("title", "")
-    titles, ctx = vault().retrieve_context(title, max_notes=6)
-    return {**state, "kg_titles": titles, "kg_context": ctx}
+    g = vault()
+    titles, ctx = g.retrieve_context(title, max_notes=6)
+    expert = g.expert_context(titles, max_chars=800) if titles else {}
+    return {**state, "kg_titles": titles, "kg_context": ctx,
+            "expert_context": expert or None}
+
+
+def format_expert_context(expert: dict | None) -> str:
+    """Render the compressed facts for the judge prompt.
+
+    Returns "" when there is nothing to say -- per the no-empty-block rule, an
+    absent section is better than a section that says "no information", which
+    reads as evidence of absence.
+    """
+    if not expert:
+        return ""
+    # Labels and header live in knowledge_graph so expert_context can
+    # charge its budget for the exact text this function will emit.
+    lines = [f"{SLOT_LABELS.get(k, k)}: {v}" for k, v in expert.items() if v]
+    if not lines:
+        return ""
+    return CONTEXT_HEADER + "\n".join(lines) + "\n\n"
+
 
 
 # ---------------------------------------------------------------- T4
@@ -140,28 +181,39 @@ Reply ONLY with JSON:
  "reasoning": "<40 words", "key_risk": "<20 words"}"""
 
 
+def _declined(reason: str) -> dict:
+    """A complete, explicit no-trade Judgment. Every field the schema defines
+    is present; `should_trade=False` is what actually stops the graph."""
+    return {"should_trade": False, "side": "none", "fair_value_cents": None,
+            "confidence": 0.0, "reasoning": reason, "key_risk": "degraded"}
+
+
 def judge_node(state: AgentState) -> AgentState:
     """The expensive call. Only reached by genuine candidates."""
     market = state.get("market")
     if not market:
-        return {**state, "judgment": None}
+        return {**state, "judgment": _declined("no market matched at T4")}
 
     client = _anthropic()
     if client is None:
-        return {**state, "judgment": None,
+        # Degrade closed, but write the FULL schema rather than None so the
+        # audit log and any downstream consumer see an explicit refusal
+        # instead of a missing field they have to interpret.
+        return {**state, "judgment": _declined("T5 unavailable - no LLM key"),
+                "decision": "SKIPPED_NO_KEY",
                 "notes": [*state.get("notes", []), "no ANTHROPIC_API_KEY; judge skipped"]}
 
     news = state.get("news", {})
     prompt = (
-        f"HEADLINE: {news.get('title','')}\n"
-        f"SOURCE: {news.get('source','')}  TIME: {news.get('pub_date','')}\n\n"
-        f"--- KNOWLEDGE BASE CONTEXT ---\n{state.get('kg_context','(none)')}\n\n"
-        f"--- LIVE MARKET ---\n"
+        format_expert_context(state.get("expert_context"))
+        + f"=== MARKET DATA (from T4) ===\n"
         f"Ticker: {market.get('ticker')}\n"
         f"Question: {market.get('title')}\n"
         f"YES bid/ask: {market.get('yes_bid_cents')}c / {market.get('yes_ask_cents')}c\n"
         f"Book depth: {market.get('book_depth_contracts')} contracts\n"
-        f"Recent volume: {market.get('volume_recent')}\n"
+        f"Recent volume: {market.get('volume_recent')}\n\n"
+        f"=== HEADLINE ===\n{news.get('title','')}\n"
+        f"SOURCE: {news.get('source','')}  TIME: {news.get('pub_date','')}\n"
     )
     try:
         resp = client.messages.create(
@@ -181,7 +233,8 @@ def judge_node(state: AgentState) -> AgentState:
         }
         return {**state, "judgment": judgment}
     except Exception as e:
-        return {**state, "judgment": None,
+        # Fail closed: an LLM/parse error must never become a trade.
+        return {**state, "judgment": _declined(f"judge error: {e}"[:150]),
                 "notes": [*state.get("notes", []), f"judge error: {e}"[:150]]}
 
 
@@ -194,45 +247,206 @@ def risk_node(state: AgentState) -> AgentState:
         return {**state, "risk": {"approved": False, "reason": "no judgment/market",
                                    "size_contracts": 0, "size_usd": 0.0,
                                    "limit_price_cents": 0.0}}
-    portfolio = PortfolioState.load()
-    decision = evaluate(judgment, market, portfolio, RISK)
+    # The real ledger, not a blank PortfolioState. This is what makes the
+    # duplicate-position / max-open / daily-loss / capital caps bind at all.
+    portfolio = Portfolio.load()
+    decision = evaluate(judgment, market, portfolio.risk_state(), RISK)
     return {**state, "risk": decision}
 
 
 # ---------------------------------------------------------------- T7
 
+# Create Order v2. The legacy /portfolio/orders endpoint was slated for
+# deprecation "no earlier than May 6, 2026" -- already past. Schema per
+# docs.kalshi.com/api-reference/orders/create-order-v2 (checked 2026-08-17).
+ORDER_PATH = "/portfolio/events/orders"
+
+
+def translate_side(side: str, price_cents: float, *,
+                   action: str = "open") -> tuple[str, float]:
+    """(our side, price in our side's cents) -> (v2 side, YES-leg price cents).
+
+    The one subtle thing in the whole execution path, so it lives in one pure
+    function that tests can assert without a network. Kalshi v2 expresses
+    every order on the YES leg: `bid` = buy YES, `ask` = sell YES (which is
+    economically identical to buying NO). Prices everywhere else in this repo
+    are denominated in the price of the side we chose, so a NO at Xc goes on
+    the wire as the YES leg at (100 - X)c.
+
+        open  yes @63c -> ("bid", 63.0)   pays 63.0c
+        open  no  @22c -> ("ask", 78.0)   pays 22.0c
+        close yes @70c -> ("ask", 70.0)   sell the YES we hold
+        close no  @30c -> ("bid", 70.0)   buy YES back to flatten the NO
+    """
+    if action not in ("open", "close"):
+        raise ValueError(f"action must be open|close, got {action!r}")
+    if side == "yes":
+        return ("bid" if action == "open" else "ask"), float(price_cents)
+    if side == "no":
+        return ("ask" if action == "open" else "bid"), 100.0 - float(price_cents)
+    raise ValueError(f"cannot build order for side {side!r}")
+
+
+def _order_body(ticker: str, v2_side: str, price_c: float, count: int) -> dict:
+    return {
+        "ticker": ticker,
+        "side": v2_side,
+        # fixed-point strings, not ints: count 2dp, price up to 4dp
+        "count": f"{int(count)}.00",
+        "price": f"{price_c / 100.0:.4f}",
+        "time_in_force": ORDER_TIME_IN_FORCE,
+        "self_trade_prevention_type": ORDER_STP,
+        "client_order_id": f"agent-{int(time.time() * 1000)}",
+    }
+
+
+def build_order_payload(market: dict, judgment: dict, decision: dict) -> dict:
+    """Translate an approved RiskDecision into a Create Order v2 body.
+
+    Pure and I/O-free so it can be asserted against the schema in tests
+    without touching the network.
+    """
+    v2_side, price_c = translate_side(judgment.get("side"),
+                                      float(decision["limit_price_cents"]),
+                                      action="open")
+    return _order_body(market.get("ticker"), v2_side, price_c,
+                       int(decision["size_contracts"]))
+
+
+def build_exit_payload(pos: "Position", exit_price_cents: float) -> dict:
+    """Create Order v2 body that flattens `pos` -- the mirror of the entry."""
+    v2_side, price_c = translate_side(pos.side, float(exit_price_cents),
+                                      action="close")
+    return _order_body(pos.ticker, v2_side, price_c, pos.size_contracts)
+
+
+def _record_fill(market: dict, judgment: dict, decision: dict, *,
+                 paper: bool, note: str) -> Position:
+    """Write the position to the ledger. Called on every fill, paper or real.
+
+    Paper fills are recorded deliberately: if a dry run does not consume a
+    position slot, the four portfolio caps stay unbound and a dry run tells you
+    nothing about how the live loop would behave.
+    """
+    entry = float(decision["limit_price_cents"])
+    tp, sl, hold = default_levels(entry, EXITS)
+    pos = Position(
+        ticker=market.get("ticker", ""),
+        side=judgment.get("side", "none"),
+        size_contracts=int(decision["size_contracts"]),
+        entry_price_cents=entry,
+        cost_usd=float(decision["size_usd"]),
+        take_profit_cents=tp,
+        stop_loss_cents=sl,
+        close_ts=market.get("close_time") or market.get("close_ts"),
+        hold_to_resolution=hold,
+        paper=paper,
+        note=note,
+    )
+    book = Portfolio.load()
+    book.open_position(pos)
+    return pos
+
+
 def execute_node(state: AgentState) -> AgentState:
-    """Place the order — only if execution is explicitly enabled."""
+    """Place the order — only if execution is explicitly enabled AND live.
+
+    Gate is `is_live()`, not `execution_enabled`: the latter alone would let
+    EXECUTION_ENABLED=true with env=demo reach client.post().
+    """
     decision = state.get("risk") or {}
     if not decision.get("approved"):
         return {**state, "executed": False}
 
-    if not RISK.execution_enabled:
-        return {**state, "executed": False,
-                "execution_result": {"status": "DRY_RUN",
-                                      "detail": "EXECUTION_ENABLED is false"}}
-
-    from kalshi_client import KalshiClient
     market = state.get("market") or {}
     judgment = state.get("judgment") or {}
+
+    if not RISK.is_live():
+        pos = _record_fill(market, judgment, decision, paper=True,
+                           note="dry-run paper fill")
+        return {**state, "executed": False,
+                "execution_result": {
+                    "status": "DRY_RUN",
+                    "detail": (f"execution_enabled={RISK.execution_enabled} "
+                               f"env={RISK.env} -> is_live=False"),
+                    "would_send": build_order_payload(market, judgment, decision),
+                    "paper_position": pos.ticker}}
+
+    from kalshi_client import KalshiClient
     client = KalshiClient.from_env()
     if not client.authenticated:
         return {**state, "executed": False,
                 "execution_result": {"status": "NO_CREDENTIALS"}}
 
-    order = {
-        "ticker": market.get("ticker"),
-        "action": "buy",
-        "side": judgment.get("side"),
-        "count": int(decision["size_contracts"]),
-        "type": "limit",
-        "yes_price": int(decision["limit_price_cents"]),
-        "client_order_id": f"agent-{int(time.time())}",
-    }
+    order = build_order_payload(market, judgment, decision)
     try:
-        result = client.post("/portfolio/orders", order)
-        return {**state, "executed": True,
-                "execution_result": {"status": "SUBMITTED", "response": result}}
+        result = client.post(ORDER_PATH, order)
     except Exception as e:
         return {**state, "executed": False,
                 "execution_result": {"status": "ERROR", "detail": str(e)[:300]}}
+
+    # Ledger write happens only after the API accepted the order, so a failed
+    # POST can never leave a phantom position blocking the ticker.
+    pos = _record_fill(market, judgment, decision, paper=False, note="live fill")
+    return {**state, "executed": True,
+            "execution_result": {"status": "SUBMITTED", "response": result,
+                                 "position": pos.ticker}}
+
+
+# ---------------------------------------------------------------- T8 (exits)
+
+def manage_positions(quotes: dict[str, dict], *, now=None,
+                     client=None) -> list[dict]:
+    """Walk every open position and close the ones that triggered.
+
+    `quotes` maps ticker -> MarketSnapshot-shaped dict. Passing quotes in
+    (rather than fetching here) keeps this testable offline and keeps the
+    network in one place. Returns one record per position for the audit log.
+    """
+    book = Portfolio.load()
+    results: list[dict] = []
+
+    for pos in list(book.positions):
+        market = quotes.get(pos.ticker)
+        if not market:
+            results.append({"ticker": pos.ticker, "action": "hold",
+                            "reason": "no quote available this cycle"})
+            continue
+
+        ex = evaluate_exit(pos, market, now=now)
+        if not ex["should_exit"]:
+            results.append({"ticker": pos.ticker, "action": "hold",
+                            "reason": ex["reason"],
+                            "unrealized_usd": pos.unrealized_usd(market)})
+            continue
+
+        payload = build_exit_payload(pos, ex["exit_price_cents"])
+        if not RISK.is_live():
+            trade = book.close_position(pos.ticker, ex["exit_price_cents"],
+                                        f"{ex['kind']}: {ex['reason']}")
+            results.append({"ticker": pos.ticker, "action": "exit_dry_run",
+                            "kind": ex["kind"], "reason": ex["reason"],
+                            "realized_usd": trade.realized_usd,
+                            "would_send": payload})
+            continue
+
+        from kalshi_client import KalshiClient
+        c = client or KalshiClient.from_env()
+        if not c.authenticated:
+            results.append({"ticker": pos.ticker, "action": "exit_failed",
+                            "reason": "NO_CREDENTIALS"})
+            continue
+        try:
+            resp = c.post(ORDER_PATH, payload)
+        except Exception as e:
+            # Leave the position open: an unsent exit must not book a fake P&L.
+            results.append({"ticker": pos.ticker, "action": "exit_failed",
+                            "reason": str(e)[:200]})
+            continue
+        trade = book.close_position(pos.ticker, ex["exit_price_cents"],
+                                    f"{ex['kind']}: {ex['reason']}")
+        results.append({"ticker": pos.ticker, "action": "exit_submitted",
+                        "kind": ex["kind"], "realized_usd": trade.realized_usd,
+                        "response": resp})
+
+    return results

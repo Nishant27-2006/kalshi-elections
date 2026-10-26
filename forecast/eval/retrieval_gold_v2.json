@@ -1,0 +1,507 @@
+[
+ {
+  "ticker": "KXMIDTERMMOV-TXSEND",
+  "title": "Texas Senate margin of victory",
+  "rules": "If the Democratic Party wins the 2026 U.S. Senate election in Texas by 1 percentage points or more, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-tx.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXMIDTERMMOV-MISEND",
+  "title": "Michigan Senate margin of victory",
+  "rules": "If the Democratic Party wins the 2026 U.S. Senate election in Michigan by 1 percentage points or more, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-mi.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXMESENOUTCOME-27JAN",
+  "title": "Maine Senate Exact Outcome",
+  "rules": "If ALL of the following occur for before Jan 2027: Dem Nominee: Graham Platner, General Election Winner: Democrat, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-me.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXMETXCOMBO-26NOV",
+  "title": "Maine-Texas Senate Combo",
+  "rules": "If ALL of the following occur: Texas Senate: James Talarico wins, Maine Senate: Susan Collins wins, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-me.md",
+   "politics/race-2026-senate-tx.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXDEMCOREFOURSENATESWEEP-26NOV03",
+  "title": "Will Democrats sweep the \"core four\" Senate races?",
+  "rules": "If Democrats win the 2026 Senate elections in ALL of the following states: Georgia, Michigan, North Carolina, AND Maine, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-senate-control.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXBLUESTRSEN-27JAN03",
+  "title": "Bluest state to elect a Republican senator in 2026?",
+  "rules": "If Massachusetts is the state with the highest 2024 Harris-minus-Trump presidential margin among states where a Republican candidate wins a 2026 U.S. Senate election, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-senate-control.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPAPPROVALBELOW-26DEC31",
+  "title": "How low will Trump's approval rating get before 2027?",
+  "rules": "If Donald Trump's approval rating during Dec 11, 2025 to Dec 31, 2026 as reported by VoteHub is below 38%, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-approval.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXGREENLANDPRICE-29JAN21",
+  "title": "How much will the US acquire Greenland for?",
+  "rules": "If the Total Monetary Consideration for a U.S. Acquisition of Greenland is exactly $0 / No Acquisition during Trump's term, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-greenland-territory.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXVPRESNOMR-28",
+  "title": "2028 Republican VP nominee",
+  "rules": "If J.D. Vance accepts the nomination for the Vice Presidency for the Republican party in 2028, then the market resolves to Yes.",
+  "gold": [
+   "politics/nomination-2028-republican.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KX2028DRUN-28",
+  "title": "Who will run for the Democratic presidential nomination in 2028?",
+  "rules": "If Cory Booker announces a presidential campaign to contest the presidential nomination of the Democratic party for the 2028 U.S. presidential election before Jan 1, 2028, then the market resolves to Yes.",
+  "gold": [
+   "politics/nomination-2028-democratic.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXPRESMATCHUP-28NOV07",
+  "title": "2028 Presidential matchup",
+  "rules": "If Gavin Newsom (D) and JD Vance (R) are the nominees for the 2028 presidential election, then the market resolves to Yes.",
+  "gold": [
+   "politics/nomination-2028-general.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "POWER-28",
+  "title": "2028: Who will win the Presidency, House, and Senate?",
+  "rules": "If the Democratic party wins the House, the Democratic party wins the Senate, and the Democratic party wins the Presidency in the 2028 election, then the market resolves to Yes.",
+  "gold": [
+   "politics/nomination-2028-general.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPOUT27-27",
+  "title": "Donald Trump announces departure as President? (Excluding death)",
+  "rules": "If Donald Trump leaves office before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-impeachment-removal.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXIMPEACH-29",
+  "title": "Will President Trump be impeached during his term?",
+  "rules": "If the President of the United States has been impeached before Jan 20, 2029, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-impeachment-removal.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPREMOVE",
+  "title": "Will Trump be impeached and removed from office?",
+  "rules": "If the President of the United States has been impeached and convicted by the U.S. Senate before Jan 20, 2029, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-impeachment-removal.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXSCOURT-29",
+  "title": "Who will be the next Supreme Court justice?",
+  "rules": "If Amul Thapar is the first person confirmed by the Senate to the position of Justice of the Supreme Court by January 20, 2029, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-supreme-court.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPPARDONS-29JAN21",
+  "title": "Who will Trump pardon?",
+  "rules": "If Robin Smith has been given a presidential pardon, commutation, or reprieve during Trump's second term and before Jan 21, 2029, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-pardons-and-prosecutions.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXFEDERALCHARGE-27JAN01",
+  "title": "Who will be charged with a federal crime in 2026?",
+  "rules": "If Letitia James has been formally charged with a federal crime  after Issuance and before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-pardons-and-prosecutions.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXGREENTERRITORY-29",
+  "title": "Will the US take control of any part of Greenland?",
+  "rules": "If the United States acquires any part of Greenland before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-greenland-territory.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXSTATE51-29",
+  "title": "What will be the 51st state in Trump's term?",
+  "rules": "If the 51st state is District of Columbia before Jan 20, 2029, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-greenland-territory.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXELECTIONBILL",
+  "title": "Will the SAVE America Act become law?",
+  "rules": "If legislation that requires proof of U.S. citizenship as a condition of registering to vote in federal elections has become law after Issuance and before Sep 1, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-legislation.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXBILLS",
+  "title": "Which bills will become law in 2026?",
+  "rules": "If legislation that requires two unaffiliated networks for processing covered credit-card transactions has become law after Issuance and before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-legislation.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXPAHLAVIHEAD-27JAN",
+  "title": "Will Reza Pahlavi lead Iran in 2026?",
+  "rules": "If Reza Pahlavi is appointed, elected, named, designated, or succeeded to the position as the head of state or government of Iran before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/intl-iran-markets.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXHORMUZNORM-26MAR17",
+  "title": "When will traffic at the Strait of Hormuz return to normal?",
+  "rules": "If the 7-day moving average of transit calls through the Strait of Hormuz as reported by the IMF PortWatch is above 60 before August 1, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/intl-iran-markets.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXNEXTPRESSEC-29JAN21",
+  "title": "Who will be Trump's next Press Secretary?",
+  "rules": "If the first new person to become White House Press Secretary after Issuance is Alina Habba, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-cabinet-departures.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXDSENATESEATSH-27",
+  "title": "How many Senate seats will Democrats hold after the Midterms? (Higher strikes)",
+  "rules": "If the Democratic party has below 53 Senate seats on Feb 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-senate-control.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXDHOUSESEATS-27",
+  "title": "How many House seats will Democrats hold after the Midterms?",
+  "rules": "If the Democratic party has below 210 House seats on Feb 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-house-control.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXBLUETSUNAMICOMBO-27FEB",
+  "title": "Blue tsunami in 2026?",
+  "rules": "If ALL of the following occur: Democrats hold 235 or more seats in the House after the 2026 midterms AND Democrats hold 51 or more seats in the Senate after the 2026 midterms, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-balance-of-power-combos.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXHOUSERACE-FL14-26",
+  "title": "FL-14 House winner?",
+  "rules": "If the House member sworn in for FL-14 for the term beginning in 2027 is a member of the Democratic Party, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-house-key-districts.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "HOUSEMT1-26",
+  "title": "MT-01 House winner?",
+  "rules": "If the House member sworn in for MT-01 for the term beginning in 2027 is a member of the Democratic Party, then the market resolves to Yes.",
+  "gold": [
+   "politics/chamber-2026-house-key-districts.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "SENATEID-26",
+  "title": "Idaho Senate winner?",
+  "rules": "If a representative of the Republican party is sworn in as a Senator of Idaho for the term beginning in 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-id.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "SENATEMS-26",
+  "title": "Mississippi Senate winner?",
+  "rules": "If a representative of the Republican party is sworn in as a Senator of Mississippi for the term beginning in 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-ms.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "SENATESD-26",
+  "title": "South Dakota Senate winner?",
+  "rules": "If a representative of the Republican party is sworn in as a Senator of South Dakota for the term beginning in 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-sd.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "SENATEAR-26",
+  "title": "Arkansas Senate winner?",
+  "rules": "If a representative of the Republican party is sworn in as a Senator of Arkansas for the term beginning in 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-ar.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "SENATETN-26",
+  "title": "Tennessee Senate winner?",
+  "rules": "If a representative of the Republican party is sworn in as a Senator of Tennessee for the term beginning in 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-senate-tn.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "GOVPARTYVT-26",
+  "title": "Vermont Governor winner?",
+  "rules": "If a representative of the Democratic party is inaugurated as the governor of Vermont pursuant to the 2026 election, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-governor-vermont.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "GOVPARTYOR-26",
+  "title": "Oregon Governor winner?",
+  "rules": "If a representative of the Democratic party is inaugurated as the governor of Oregon pursuant to the 2026 election, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-governor-oregon.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "GOVPARTYNH-28",
+  "title": "New Hampshire Governor winner?",
+  "rules": "If a representative of the Democratic party is inaugurated as the governor of New Hampshire pursuant to the 2026 election, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2028-governor-new-hampshire.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "HOUSEPA7-26",
+  "title": "PA-07 House winner?",
+  "rules": "If the House member sworn in for PA-07 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-house-pa07-pa08-wa03.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "HOUSEWA3-26",
+  "title": "WA-03 House winner?",
+  "rules": "If the House member sworn in for WA-03 for the term beginning in 2027 is a member of the Democratic party, then the market resolves to Yes.",
+  "gold": [
+   "politics/race-2026-house-pa07-pa08-wa03.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXRETIREMM-26",
+  "title": "Will Mitch McConnell resign his office before the midterms?",
+  "rules": "If Mitch McConnell has resigned, retired, or otherwise voluntarily stepped down from their Congressional office, or announced their intent to resign, retire, or otherwise voluntarily step down from their office prematurely, after Issuance and before Nov 3, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-congress-departures.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXLEAVEWALZ-27JAN01",
+  "title": "Tim Walz out as Governor of Minnesota?",
+  "rules": "If Tim Walz leaves as Governor of Minnesota after Issuance and before Sep 1, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-congress-departures.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXINSURRECTION-29",
+  "title": "Will Trump invoke the Insurrection Act?",
+  "rules": "If the President of the United States has invoked the Insurrection Act to deploy the United States military and/or the federalized National Guard within the United States before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-executive-actions.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXMJSCHEDULE",
+  "title": "Will marijuana be rescheduled?",
+  "rules": "If marijuana is rescheduled from Schedule I to a lower drug schedule under the Controlled Substances Act before January 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-executive-actions.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXMIDTERMHAPPEN-2026",
+  "title": "Will the midterms happen on time?",
+  "rules": "If the regularly scheduled biennial federal general election for the U.S. House of Representatives is conducted on time in all 50 U.S. states on the federally prescribed Election Day for 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-executive-actions.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KX250DOLLARBILL-27",
+  "title": "Will Trump create a $250 bill featuring himself?",
+  "rules": "If bill that mandates the creation and issuance of a $250 U.S. bill featuring Donald J. Trump's likeness becomes law before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-executive-actions.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPRESIGN",
+  "title": "Will Trump resign during his term?",
+  "rules": "If the President of the United States elected for the 2025-2029 term resigns the office, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-tenure.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXDJTATTACKWARSH-27",
+  "title": "Will Trump publicly criticize Kevin Warsh?",
+  "rules": "If Donald Trump publicly criticizes Kevin Warsh before Sep 18, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-tenure.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPCOUNTRIES-27JAN01",
+  "title": "What countries will Trump visit in 2026?",
+  "rules": "If Donald Trump has physically travelled to and been present within the geographic boundaries of Israel after Issuance and before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-travel.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTRUMPIRAN",
+  "title": "Will Donald Trump visit Iran?",
+  "rules": "If Donald Trump has physically travelled to and been present within the geographic boundaries of Iran before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-trump-travel.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXKASHOUT-26APR",
+  "title": "Kash Patel out as FBI Director?",
+  "rules": "If Kash Patel leaves as FBI Director before Sep 1, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-personnel-next.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXCABOUT-26MAY22",
+  "title": "Who will leave Trump's Cabinet next?",
+  "rules": "If Marco Rubio is the first member of the Cabinet of Donald Trump to leave or announce they will leave (such as by quitting, being fired, or being impeached) after May 22, 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/policy-personnel-next.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXNOBELPEACE-26",
+  "title": "2026 Nobel Peace Prize winner",
+  "rules": "If Donald Trump wins the Nobel Peace Prize in 2026, then the market resolves to Yes.",
+  "gold": [
+   "politics/intl-nobel-peace-2026.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXABRAHAMSA-27",
+  "title": "Which countries will normalize relations with Israel before 2027?",
+  "rules": "If Israel and Saudi Arabia normalize diplomatic relations before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/intl-abraham-accords.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXTAIWANLVL4",
+  "title": "Will the US issue a Level 4 travel advisory for Taiwan?",
+  "rules": "If the U.S. State Department issues, updates, or reaffirms a Level 4 travel advisory for Taiwan after Issuance and before Jan 1, 2027, then the market resolves to Yes.",
+  "gold": [
+   "politics/intl-taiwan-travel-advisory.md"
+  ],
+  "as_of": "2026-10-10"
+ },
+ {
+  "ticker": "KXCITRINI-28JUL01",
+  "title": "Will the Citrini scenario happen?",
+  "rules": "If at least 3 of: \nunemployment rate exceeds 10% (monthly BLS)\nS&P 500 declines more than 30% from its closing level on Issuance\nZillow Home Value Index declines more than 10% YoY in any of: NYC, LA, San Francisco, Chicago, Houston, Phoenix\nlabor share of gross domestic income (GDI) first-release value for any quarter falls below 50%\nCPI-U (All items, not seasonally-adjusted) YoY falls below 0% in any monthly release\n\noccur in any release published after Issuance and before July 2028, then the market resolves to Yes.",
+  "gold": [
+   "politics/misc-citrini-scenario.md"
+  ],
+  "as_of": "2026-10-10"
+ }
+]

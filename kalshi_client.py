@@ -31,6 +31,8 @@ from __future__ import annotations
 import base64
 import datetime
 import os
+import random
+import time
 from dataclasses import dataclass
 from urllib.parse import urlparse
 
@@ -39,8 +41,15 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import padding
 
-PROD_BASE_URL = "https://api.elections.kalshi.com/trade-api/v2"
-DEMO_BASE_URL = "https://demo-api.kalshi.co/trade-api/v2"
+# Recommended dedicated Trade API hosts (docs.kalshi.com/getting_started/
+# api_environments, checked 2026-08-17). The older shared hosts --
+# api.elections.kalshi.com / demo-api.kalshi.co -- remain supported for
+# compatibility and are kept below as fallbacks, not as defaults.
+PROD_BASE_URL = "https://external-api.kalshi.com/trade-api/v2"
+DEMO_BASE_URL = "https://external-api.demo.kalshi.co/trade-api/v2"
+
+LEGACY_PROD_BASE_URL = "https://api.elections.kalshi.com/trade-api/v2"
+LEGACY_DEMO_BASE_URL = "https://demo-api.kalshi.co/trade-api/v2"
 
 
 def load_private_key(key_path: str):
@@ -124,11 +133,57 @@ class KalshiClient:
             "KALSHI-ACCESS-TIMESTAMP": timestamp_ms,
         }
 
+    # Batch sweeps get rate-limited: one 62-series pass returned HTTP 429 on 13
+    # of them, and a 351-series pass on 146 (41.6%). Without a retry the caller
+    # sees an empty result and cannot tell throttling from a dead series.
+    MAX_RETRIES = 5
+    BACKOFF_BASE_SECONDS = 0.75
+    # Jitter matters more than the base here. Without it every worker that got
+    # throttled in the same instant backs off for the SAME interval and they
+    # all return together, reproducing the burst that caused the 429 -- a
+    # parallel 6-worker sweep still lost 7 requests after all retries, and
+    # re-running those same 7 serially succeeded immediately. Full jitter
+    # spreads the retries across the window instead.
+    BACKOFF_JITTER = 0.5          # fraction of the delay that is randomised
+    RETRY_STATUS = frozenset({429, 500, 502, 503, 504})
+
+    def _backoff_seconds(self, attempt: int) -> float:
+        """Exponential backoff with jitter, for retry number `attempt`."""
+        delay = self.BACKOFF_BASE_SECONDS * (2 ** attempt)
+        return delay * (1.0 - self.BACKOFF_JITTER * random.random())
+
     def get(self, path: str, params: dict | None = None) -> dict:
-        headers = self._auth_headers("GET", path)
-        resp = requests.get(self.base_url + path, headers=headers, params=params, timeout=15)
-        resp.raise_for_status()
-        return resp.json()
+        """Authenticated-if-possible GET with backoff on throttling.
+
+        Retries only on 429 and 5xx -- a 400 or 404 is a real answer and
+        retrying it just wastes time. Raises the last error if every attempt
+        fails, so a caller still learns that the read did not happen.
+        """
+        last_exc: Exception | None = None
+        for attempt in range(self.MAX_RETRIES):
+            headers = self._auth_headers("GET", path)
+            try:
+                resp = requests.get(self.base_url + path, headers=headers,
+                                    params=params, timeout=15)
+            except requests.RequestException as e:
+                last_exc = e                       # connection/timeout: retry
+            else:
+                if resp.status_code not in self.RETRY_STATUS:
+                    resp.raise_for_status()
+                    return resp.json()
+                last_exc = requests.HTTPError(
+                    f"{resp.status_code} for {path}", response=resp)
+                # Honour Retry-After when the server sends one.
+                wait = resp.headers.get("Retry-After")
+                if wait:
+                    try:
+                        time.sleep(min(float(wait), 10.0))
+                        continue
+                    except ValueError:
+                        pass
+            if attempt < self.MAX_RETRIES - 1:
+                time.sleep(self._backoff_seconds(attempt))
+        raise last_exc if last_exc else RuntimeError(f"GET {path} failed")
 
     def post(self, path: str, json_body: dict | None = None) -> dict:
         """Authenticated POST. Used for order placement — NOT called by
